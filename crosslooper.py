@@ -23,13 +23,13 @@ normalize = False
 denoise = False
 lowpass = 0
 samples = False
-loop = False
+loop = True
 loopstart = 5
 loopstartmax = None
-loopendmin = 30.0
+loopendmin = 20.0
 looplenmin = 0.0
 loopsearchstep = 1.0
-loopsearchlen = 30.0
+loopsearchlen = 5.0
 
 ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
 ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
