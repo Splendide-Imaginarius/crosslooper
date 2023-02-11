@@ -96,7 +96,10 @@ def show2(fs,s1,s2,title=None):
 def read_normalized(in1,in2):
   global normalize
   r1,s1 = normalize_denoise(in1,'out1')
-  r2,s2 = normalize_denoise(in2,'out2')
+  if in1 == in2:
+    r2,s2 = r1,s1
+  else:
+    r2,s2 = normalize_denoise(in2,'out2')
   if r1 != r2:
     old,normalize = normalize,True
     r1,s1 = normalize_denoise(in1,'out1')
