@@ -19,7 +19,7 @@ setup(
     description="Calculate loop metadata on audio files.",
     author="Splendide Imaginarius",
     url="https://github.com/Splendide-Imaginarius/crosslooper",
-    py_modules=["crosslooper"],
+    py_modules=["crosslooper","crosslooperdir"],
     install_requires=['numpy','scipy','matplotlib','mutagen'],
     setup_requires=['stpl','restview'],
     python_requires='>=3.6',
@@ -41,5 +41,6 @@ setup(
     entry_points="""
        [console_scripts]
        crosslooper=crosslooper:main
+       crosslooperdir=crosslooperdir:main
        """
 )
