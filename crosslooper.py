@@ -12,6 +12,7 @@ import pathlib
 import sys
 import statistics
 import mutagen
+from mutagen import ogg, flac
 
 __version__ = "1.0.1"
 __author__ = """Splendide Imaginarius"""
@@ -264,11 +265,16 @@ def file_offset(**ka):
   loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
   loopforce = ka['loopforce']
 
-  if not loopforce:
+  if loop:
     mf = mutagen.File(in1)
+    if not isinstance(mf, (ogg.OggFileType, flac.FLAC)):
+      print('Not a Vorbis Comment file, skipping')
+      return in1, None
+
+  if loop and not loopforce:
     if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
       print('Loop tags already present, skipping')
-      exit(0)
+      return in1, None
 
   sample_rate,s1,s2 = read_normalized(in1,in2)
   if loop:
@@ -337,7 +343,6 @@ def file_offset(**ka):
     offset = offset / sample_rate
   if loop:
     print(sync_text)
-    mf = mutagen.File(in1)
     mf['LOOPSTART'] = [str(best_start)]
     mf['LOOPLENGTH'] = [str(best_length)]
     mf.save()
