@@ -30,6 +30,7 @@ loopendmin = 20.0
 looplenmin = 0.0
 loopsearchstep = 1.0
 loopsearchlen = 5.0
+loopforce = False
 
 ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
 ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
@@ -233,6 +234,13 @@ def cli_parser(**ka):
       default=5.0,
       type=float,
       help="Snippet length for loop search (seconds). (default: 5)")
+  if 'loopforce' not in ka:
+    parser.add_argument(
+      '--loopforce',
+      dest='loopforce',
+      action='store_true',
+      default=False,
+      help='Overwrite existing loop tags. (default: skip files with existing loop tags)')
   return parser
 
 def file_offset(**ka):
@@ -244,13 +252,21 @@ def file_offset(**ka):
   args = parser.parse_args().__dict__
   ka.update(args)
 
-  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen
+  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce
   in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
   if in2 is None:
     in2 = in1
   normalize,denoise,lowpass,samples = ka['normalize'],ka['denoise'],ka['lowpass'],ka['samples']
   loop,loopstart,loopstartmax,loopendmin,looplenmin = ka['loop'],ka['loopstart'],ka['loopstartmax'],ka['loopendmin'],ka['looplenmin']
   loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
+  loopforce = ka['loopforce']
+
+  if not loopforce:
+    mf = mutagen.File(in1)
+    if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
+      print('Loop tags already present, skipping')
+      exit(0)
+
   sample_rate,s1,s2 = read_normalized(in1,in2)
   if loop:
     best_ca = 0
