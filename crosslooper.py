@@ -9,10 +9,12 @@ from scipy.io import wavfile
 import tempfile
 import os
 import pathlib
+import subprocess
 import sys
 import statistics
 import mutagen
 from mutagen import ogg, flac
+from tqdm import tqdm
 
 __version__ = "1.0.1"
 __author__ = """Splendide Imaginarius"""
@@ -32,6 +34,7 @@ looplenmin = 0.0
 loopsearchstep = 1.0
 loopsearchlen = 5.0
 loopforce = False
+verbose = False
 
 ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
 ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
@@ -42,12 +45,14 @@ ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
 o = lambda x: '%s%s'%(x,'.wav')
 
+def print_maybe(*s, **ka):
+  if verbose:
+    print(*s, **ka)
+
 def in_out(command,infile,outfile):
     hdr = '-'*len(command)
-    print("%s\n%s\n%s"%(hdr,command,hdr))
-    ret = os.system(command.format(infile,outfile))
-    if 0 != ret:
-      sys.exit(ret)
+    print_maybe("%s\n%s\n%s"%(hdr,command,hdr))
+    subprocess.check_call(command.format(infile,outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
 
 def normalize_denoise(infile,outname):
   with tempfile.TemporaryDirectory() as tempdir:
@@ -245,6 +250,13 @@ def cli_parser(**ka):
       action='store_true',
       default=False,
       help='Overwrite existing loop tags. (default: skip files with existing loop tags)')
+  if 'verbose' not in ka:
+    parser.add_argument(
+      '-v','--verbose',
+      dest='verbose',
+      action='store_true',
+      default=False,
+      help='Verbose output. (default: only show progress indicator)')
   return parser
 
 def file_offset(**ka):
@@ -256,24 +268,24 @@ def file_offset(**ka):
   args = parser.parse_args().__dict__
   ka.update(args)
 
-  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce
+  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce,verbose
   in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
   if in2 is None:
     in2 = in1
   normalize,denoise,lowpass,samples = ka['normalize'],ka['denoise'],ka['lowpass'],ka['samples']
   loop,loopstart,loopstartmax,loopendmin,looplenmin = ka['loop'],ka['loopstart'],ka['loopstartmax'],ka['loopendmin'],ka['looplenmin']
   loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
-  loopforce = ka['loopforce']
+  loopforce,verbose = ka['loopforce'],ka['verbose']
 
   if loop:
     mf = mutagen.File(in1)
     if not isinstance(mf, (ogg.OggFileType, flac.FLAC)):
-      print('Not a Vorbis Comment file, skipping')
+      print_maybe('Not a Vorbis Comment file, skipping')
       return in1, None
 
   if loop and not loopforce:
     if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
-      print('Loop tags already present, skipping')
+      print_maybe('Loop tags already present, skipping')
       return in1, None
 
   sample_rate,s1,s2 = read_normalized(in1,in2)
@@ -286,7 +298,16 @@ def file_offset(**ka):
     searchlen_samples = int(loopsearchlen*sample_rate)
     init_start = int(loopstart*sample_rate)
     init_end_min = int(loopendmin*sample_rate)
-    for search_offset in range(0, len(s1) - searchlen_samples, int(loopsearchstep * sample_rate)):
+
+    search_offset_max = len(s1) - searchlen_samples
+    search_offset_max_seconds = search_offset_max / sample_rate
+    loopsearchstep_samples = int(loopsearchstep * sample_rate)
+
+    pbar = ka['pbar'] if 'pbar' in ka else tqdm(unit='audio_sec')
+    pbar.set_description(in1.name)
+    pbar.reset(total=search_offset_max_seconds)
+
+    for search_offset in range(0, search_offset_max, loopsearchstep_samples):
       this_start = init_start + search_offset
       # We don't want to only loop a tiny piece at the end of the file.
       if loopstartmax is not None and this_start > int(loopstartmax*sample_rate):
@@ -301,8 +322,10 @@ def file_offset(**ka):
       this_end = this_end_min + (padsize - xmax)
       this_length = this_end - this_start
       if this_end > len(s1):
+        pbar.update(loopsearchstep)
         continue
       if this_length < looplenmin*sample_rate:
+        pbar.update(loopsearchstep)
         continue
       if this_normalized_ca > best_normalized_ca:
         best_ca = this_ca
@@ -310,8 +333,9 @@ def file_offset(**ka):
         best_start = this_start
         best_end = this_end
         best_length = this_length
-      print("offset", search_offset, "start", this_start, "end", this_end, "length", this_length, "confidence", this_ca, "normalized_confidence", this_normalized_ca)
-    print("best", "start", best_start, "end", best_end, "length", best_length, "confidence", best_ca, "normalized_confidence", best_normalized_ca)
+      print_maybe("offset", search_offset, "start", this_start, "end", this_end, "length", this_length, "confidence", this_ca, "normalized_confidence", this_normalized_ca)
+      pbar.update(loopsearchstep)
+    print_maybe("best", "start", best_start, "end", best_end, "length", best_length, "confidence", best_ca, "normalized_confidence", best_normalized_ca)
   else:
     ls1,ls2,padsize,xmax,ca = corrabs(s1,s2)
   if show: show1(sample_rate,ca,title='Correlation',v=xmax/sample_rate)
@@ -342,12 +366,12 @@ def file_offset(**ka):
   if not samples:
     offset = offset / sample_rate
   if loop:
-    print(sync_text)
+    print_maybe(sync_text)
     mf['LOOPSTART'] = [str(best_start)]
     mf['LOOPLENGTH'] = [str(best_length)]
     mf.save()
   else:
-    print(sync_text%(file,offset))
+    print_maybe(sync_text%(file,offset))
   return file,offset
 
 main = file_offset
