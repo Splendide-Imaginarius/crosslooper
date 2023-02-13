@@ -4,6 +4,8 @@ CrossLooper is a tool for automatically setting the `LOOPSTART` and `LOOPLENGTH`
 
 ## How to use
 
+The audio files must be of a container format that supports Vorbis Comment metadata. In practice, this means that Ogg files and FLAC files will work. If your audio files are in some other container format (e.g. MP3), you'll need to convert them first.
+
 Typically (~76% of the time), you can run CrossLooper with no hints, and it will guess the loop points correctly:
 
 ```
