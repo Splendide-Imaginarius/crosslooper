@@ -24,6 +24,8 @@ Usually, the `--looplenmin` hint is the only one you will need, but the others m
 
 Copyright 2023 Splendide Imaginarius.
 
+This is not a license requirement, but if you use CrossLooper for a project such as a game or a game mod, it would be greatly appreciated if you credit me. Example credits: "BGM was looped with CrossLooper by Splendide Imaginarius." Linking back to this Git repository would also be greatly appreciated.
+
 CrossLooper is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 CrossLooper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
