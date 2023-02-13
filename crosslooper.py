@@ -7,6 +7,7 @@ import numpy as np
 from scipy import fft
 from scipy.io import wavfile
 import tempfile
+import math
 import os
 import pathlib
 import subprocess
@@ -299,7 +300,12 @@ def file_offset(**ka):
     init_start = int(loopstart*sample_rate)
     init_end_min = int(loopendmin*sample_rate)
 
+    # We don't want to only loop a tiny piece at the end of the file.
+    loopstartmax_samples = loopstartmax*sample_rate if loopstartmax is not None else math.inf
+    loopstartmax_samples = int(min(loopstartmax_samples, len(s1) * 0.47))
+
     search_offset_max = len(s1) - searchlen_samples
+    search_offset_max = min(search_offset_max, loopstartmax_samples - init_start)
     search_offset_max_seconds = search_offset_max / sample_rate
     loopsearchstep_samples = int(loopsearchstep * sample_rate)
 
@@ -309,11 +315,6 @@ def file_offset(**ka):
 
     for search_offset in range(0, search_offset_max, loopsearchstep_samples):
       this_start = init_start + search_offset
-      # We don't want to only loop a tiny piece at the end of the file.
-      if loopstartmax is not None and this_start > int(loopstartmax*sample_rate):
-          break
-      if this_start > len(s1) * 0.47:
-          break
       this_end_min = init_end_min + search_offset
       candidate = corrabs(s1[this_start:][:searchlen_samples], s2[this_end_min:])
       ls1,ls2,padsize,xmax,ca = candidate
