@@ -11,6 +11,28 @@ import crosslooper
 __version__ = crosslooper.__version__
 __author__ = crosslooper.__author__
 
+def cli_parser(**ka):
+  parser = crosslooper.cli_parser(**ka)
+
+  if 'indir' not in ka:
+    parser.add_argument(
+      '--indir',
+      dest='indir',
+      action='store',
+      default='Audio/BGM',
+      type=str,
+      help="Directory containing audio files to loop. (default: 'Audio/BGM')")
+  if 'threads' not in ka:
+    parser.add_argument(
+      '--threads',
+      dest='threads',
+      action='store',
+      default=None,
+      type=int,
+      help="Number of threads to use. (default: use all hardware threads)")
+
+  return parser
+
 def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, ka):
   tqdm.set_lock(pbar_lock)
   single_pbar = tqdm(unit='audio_sec', position=process_num+1)
@@ -20,16 +42,30 @@ def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, k
     if finished:
       break
 
-    crosslooper.file_offset(in1=f, pbar=single_pbar, **ka)
+    ka['in1'] = f
+    crosslooper.file_offset(use_argparse=False, pbar=single_pbar, **ka)
 
     progress_queue.put(1)
 
-def file_offset_dir(path, **ka):
+def file_offset_dir(**ka):
   """CLI interface to save loop metadata of a directory of audio files.
   ffmpeg needs to be available.
   """
 
+  ka['in1'] = None
+  ka['in2'] = None
+
+  parser = cli_parser(**ka)
+  args = parser.parse_args().__dict__
+  ka.update(args)
+
+  path = ka['indir']
   path = Path(path)
+  path = path.resolve()
+  if not path.exists():
+    raise Exception(f'Folder "{path}" does not exist.')
+  if path.is_file():
+    raise Exception(f'Folder "{path}" is a file.')
 
   files = list(path.glob(f"**/*"))
 
@@ -42,7 +78,9 @@ def file_offset_dir(path, **ka):
 
   input_file_queue = Queue()
 
-  process_num = os.cpu_count()
+  process_num = ka['threads']
+  if process_num is None:
+    process_num = os.cpu_count()
 
   progress_queue = Queue()
 
@@ -65,5 +103,5 @@ def file_offset_dir(path, **ka):
 
 main = file_offset_dir
 if __name__ == '__main__':
-    main('./Audio/BGM')
+    main()
 

@@ -260,14 +260,15 @@ def cli_parser(**ka):
       help='Verbose output. (default: only show progress indicator)')
   return parser
 
-def file_offset(**ka):
+def file_offset(use_argparse = True, **ka):
   """CLI interface to calculate loop metadata of an audio file.
   ffmpeg needs to be available.
   """
 
-  parser = cli_parser(**ka)
-  args = parser.parse_args().__dict__
-  ka.update(args)
+  if use_argparse:
+    parser = cli_parser(**ka)
+    args = parser.parse_args().__dict__
+    ka.update(args)
 
   global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce,verbose
   in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
