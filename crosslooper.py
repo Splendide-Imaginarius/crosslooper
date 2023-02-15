@@ -35,6 +35,7 @@ looplenmin = 0.0
 loopsearchstep = 1.0
 loopsearchlen = 5.0
 loopforce = False
+skip = False
 verbose = False
 
 ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
@@ -251,6 +252,13 @@ def cli_parser(**ka):
       action='store_true',
       default=False,
       help='Overwrite existing loop tags. (default: skip files with existing loop tags)')
+  if 'skip' not in ka:
+    parser.add_argument(
+      '--skip',
+      dest='skip',
+      action='store_true',
+      default=False,
+      help='Skip this audio file. (default: process file)')
   if 'verbose' not in ka:
     parser.add_argument(
       '-v','--verbose',
@@ -270,14 +278,14 @@ def file_offset(use_argparse = True, **ka):
     args = parser.parse_args().__dict__
     ka.update(args)
 
-  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce,verbose
+  global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce,skip,verbose
   in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
   if in2 is None:
     in2 = in1
   normalize,denoise,lowpass,samples = ka['normalize'],ka['denoise'],ka['lowpass'],ka['samples']
   loop,loopstart,loopstartmax,loopendmin,looplenmin = ka['loop'],ka['loopstart'],ka['loopstartmax'],ka['loopendmin'],ka['looplenmin']
   loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
-  loopforce,verbose = ka['loopforce'],ka['verbose']
+  loopforce,skip,verbose = ka['loopforce'],ka['skip'],ka['verbose']
 
   if loop:
     mf = mutagen.File(in1)
@@ -289,6 +297,10 @@ def file_offset(use_argparse = True, **ka):
     if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
       print_maybe('Loop tags already present, skipping')
       return in1, None
+
+  if skip:
+    print_maybe('Skipping')
+    return in1, None
 
   sample_rate,s1,s2 = read_normalized(in1,in2)
   if loop:

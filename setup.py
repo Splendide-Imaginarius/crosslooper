@@ -20,7 +20,7 @@ setup(
     author="Splendide Imaginarius",
     url="https://github.com/Splendide-Imaginarius/crosslooper",
     py_modules=["crosslooper","crosslooperdir"],
-    install_requires=['numpy','scipy','matplotlib','mutagen','tqdm'],
+    install_requires=['numpy','scipy','matplotlib','mutagen','tqdm','tomli >= 1.1.0 ; python_version < "3.11"'],
     setup_requires=['stpl','restview'],
     python_requires='>=3.6',
     keywords='media audio file synchronization looping metadata rpg maker',

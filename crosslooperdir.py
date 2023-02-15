@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
 from multiprocessing import Process, Queue, Lock
 import os
 from pathlib import Path
+# tomllib is Python 3.11+ only; import a compat shim for older Pythons.
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 from tqdm import tqdm
 
@@ -22,6 +28,14 @@ def cli_parser(**ka):
       default='Audio/BGM',
       type=str,
       help="Directory containing audio files to loop. (default: 'Audio/BGM')")
+  if 'presetconf' not in ka:
+    parser.add_argument(
+      '--presetconf',
+      dest='presetconf',
+      action='store',
+      default=None,
+      type=str,
+      help="TOML file containing presets for looping audio files. (default: no presets)")
   if 'threads' not in ka:
     parser.add_argument(
       '--threads',
@@ -33,7 +47,7 @@ def cli_parser(**ka):
 
   return parser
 
-def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, ka):
+def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, ka, presets):
   tqdm.set_lock(pbar_lock)
   single_pbar = tqdm(unit='audio_sec', position=process_num+1)
 
@@ -42,8 +56,15 @@ def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, k
     if finished:
       break
 
-    ka['in1'] = f
-    crosslooper.file_offset(use_argparse=False, pbar=single_pbar, **ka)
+    this_ka = deepcopy(ka)
+    this_ka['in1'] = f
+
+    for preset_name in presets:
+      if preset_name in f.stem.lower():
+        this_ka.update(presets[preset_name])
+        break
+
+    crosslooper.file_offset(use_argparse=False, pbar=single_pbar, **this_ka)
 
     progress_queue.put(1)
 
@@ -76,6 +97,19 @@ def file_offset_dir(**ka):
   total_pbar.set_description('folder')
   total_pbar.reset(total=len(files))
 
+  presets = {}
+  presetconf = ka['presetconf']
+  presets_tmp = {}
+  if presetconf is not None:
+    with open(presetconf, "rb") as f:
+      presets_tmp = tomllib.load(f)
+  for trackname in presets_tmp:
+    presets[trackname.lower()] = {}
+    for option in presets_tmp[trackname]:
+      if not option.lower() in ['normalize', 'denoise', 'lowpass', 'loopstart', 'loopstartmax', 'loopendmin', 'looplenmin', 'loopsearchstep', 'loopsearchlen', 'loopforce', 'skip']:
+        raise Exception(f'Unknown TOML option: {option}')
+      presets[trackname.lower()][option.lower()] = presets_tmp[trackname][option]
+
   input_file_queue = Queue()
 
   process_num = ka['threads']
@@ -86,7 +120,7 @@ def file_offset_dir(**ka):
 
   loop_processes = []
   for p in range(process_num):
-    loop_processes.append(Process(target=loop_process_run, args=(input_file_queue, progress_queue, pbar_lock, p, ka)))
+    loop_processes.append(Process(target=loop_process_run, args=(input_file_queue, progress_queue, pbar_lock, p, ka, presets)))
 
   for p in loop_processes:
     p.start()
