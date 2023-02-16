@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import configparser
 from copy import deepcopy
 from multiprocessing import Process, Queue, Lock
 import os
@@ -102,14 +103,27 @@ def file_offset_dir(**ka):
   pbar_lock = Lock()
   tqdm.set_lock(pbar_lock)
 
-  total_pbar = tqdm(unit='track', position=0)
-  total_pbar.set_description('folder')
-  total_pbar.reset(total=len(files))
-
   presets = {}
   presetconf = ka['presetconf']
   gametitle = ka['gametitle']
   presets_tmp = {}
+
+  # Detect game title
+  if gametitle is None:
+    inidir = Path('.')
+    inidir = inidir.resolve()
+    inipaths = inidir.glob('*.ini')
+
+    for i in inipaths:
+      gameini = configparser.ConfigParser()
+      gameini.read(i)
+      if 'Game' in gameini and 'Title' in gameini['Game']:
+        gametitle = gameini['Game']['Title']
+        break
+
+  total_pbar = tqdm(unit='track', position=0)
+  total_pbar.set_description('folder' if gametitle is None else gametitle)
+  total_pbar.reset(total=len(files))
 
   # Find preset file for game title
   if presetconf is None and gametitle is not None:
