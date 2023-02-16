@@ -2,9 +2,11 @@
 
 import configparser
 from copy import deepcopy
+import json
 from multiprocessing import Process, Queue, Lock
 import os
 from pathlib import Path
+import re
 # tomllib is Python 3.11+ only; import a compat shim for older Pythons.
 try:
     import tomllib
@@ -45,7 +47,7 @@ def cli_parser(**ka):
       action='store',
       default=None,
       type=str,
-      help="Title of game, used to find presets.")
+      help="Title of game, used to find presets. (default: detect based on game engine)")
   if 'gamedir' not in ka:
     parser.add_argument(
       '--gamedir',
@@ -54,6 +56,22 @@ def cli_parser(**ka):
       default='.',
       type=str,
       help="Directory containing game files. (default: current working directory)")
+  if 'gameengine' not in ka:
+    parser.add_argument(
+      '--gameengine',
+      dest='gameengine',
+      action='store',
+      default='RPG Maker',
+      type=str,
+      help="Game engine family. (default: 'RPG Maker')")
+  if 'gameenginever' not in ka:
+    parser.add_argument(
+      '--gameenginever',
+      dest='gameenginever',
+      action='store',
+      default='VX Ace',
+      type=str,
+      help="Game engine version. (default: 'VX Ace')")
   if 'threads' not in ka:
     parser.add_argument(
       '--threads',
@@ -107,11 +125,36 @@ def file_offset_dir(**ka):
   if gamedir.is_file():
     raise Exception(f'Folder "{gamedir}" is a file.')
 
+  # Validate game engine
+  gameengine = ka['gameengine']
+  gameenginever = ka['gameenginever']
+  if gameengine.lower() == 'RPG Maker'.lower():
+    if gameenginever.lower() in ['VX Ace'.lower(), 'VX'.lower(), 'XP'.lower()]:
+      gameengine, gameenginever = 'RPG Maker', 'VX Ace'
+    elif gameenginever.lower() in ['MV'.lower(), 'MZ'.lower()]:
+      gameengine, gameenginever = 'RPG Maker', 'MV'
+    else:
+      raise Exception(f'Unsupported RPG Maker version "{gameenginever}"')
+  elif gameengine.lower() == 'mkxp'.lower():
+    gameengine, gameenginever = 'RPG Maker', 'VX Ace'
+  else:
+    raise Exception(f'Unsupported engine "{gameengine}"')
+
   # Validate BGM dir
   indir = ka['indir']
   if indir is None:
-    # RGSS default
-    indir = gamedir / 'Audio' / 'BGM'
+    if gameenginever == 'VX Ace':
+      # RGSS
+      indir = gamedir / 'Audio' / 'BGM'
+    elif gameenginever == 'MV':
+      # NW.js
+      packagejson = gamedir / 'package.json'
+      with open(packagejson, 'r') as packagejsonfile:
+        packagejsondata = json.load(packagejsonfile)
+      indexhtml = gamedir / packagejsondata['main']
+      indir = indexhtml.parent / 'audio' / 'bgm'
+    else:
+      raise Exception(f'Failed to guess BGM dir for {gameenginever}')
   else:
     indir = Path(indir)
   indir = indir.resolve()
@@ -132,19 +175,29 @@ def file_offset_dir(**ka):
 
   # Detect game title
   if gametitle is None:
-    # RGSS default
-    inipaths = gamedir.glob('*.ini')
+    if gameenginever == 'VX Ace':
+      # RGSS
+      inipaths = gamedir.glob('*.ini')
 
-    for i in inipaths:
-      gameini = configparser.ConfigParser()
-      try:
-        gameini.read(i)
-      except UnicodeDecodeError:
-        # Workaround for Japanese games
-        gameini.read(i, encoding='shift_jis')
-      if 'Game' in gameini and 'Title' in gameini['Game']:
-        gametitle = gameini['Game']['Title']
-        break
+      for i in inipaths:
+        gameini = configparser.ConfigParser()
+        try:
+          gameini.read(i)
+        except UnicodeDecodeError:
+          # Workaround for Japanese games
+          gameini.read(i, encoding='shift_jis')
+        if 'Game' in gameini and 'Title' in gameini['Game']:
+          gametitle = gameini['Game']['Title']
+          break
+    elif gameenginever == 'MV':
+      # NW.js
+      with open(indexhtml, 'r') as htmlfile:
+        htmldata = htmlfile.read()
+        htmlmatch = re.search(r'<title>(.*)</title>', htmldata)
+        if(htmlmatch is not None):
+          gametitle = htmlmatch.group(1)
+  if gametitle is None:
+    raise Exception('Failed to detect game title')
 
   total_pbar = tqdm(unit='track', position=0)
   total_pbar.set_description('folder' if gametitle is None else gametitle)
