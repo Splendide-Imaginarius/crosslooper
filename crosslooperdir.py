@@ -116,7 +116,11 @@ def file_offset_dir(**ka):
 
     for i in inipaths:
       gameini = configparser.ConfigParser()
-      gameini.read(i)
+      try:
+        gameini.read(i)
+      except UnicodeDecodeError:
+        # Workaround for Japanese games
+        gameini.read(i, encoding='shift_jis')
       if 'Game' in gameini and 'Title' in gameini['Game']:
         gametitle = gameini['Game']['Title']
         break
