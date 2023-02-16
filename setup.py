@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 import ast
 import re
@@ -20,6 +20,10 @@ setup(
     author="Splendide Imaginarius",
     url="https://github.com/Splendide-Imaginarius/crosslooper",
     py_modules=["crosslooper","crosslooperdir"],
+    packages=find_packages(include=['crosslooperpresets']),
+    package_data={
+        'crosslooperpresets': ['*.conf'],
+    },
     install_requires=['numpy','scipy','matplotlib','mutagen','tqdm','tomli >= 1.1.0 ; python_version < "3.11"'],
     setup_requires=['stpl','restview'],
     python_requires='>=3.6',

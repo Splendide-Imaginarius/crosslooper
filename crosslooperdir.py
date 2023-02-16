@@ -13,6 +13,7 @@ except ModuleNotFoundError:
 from tqdm import tqdm
 
 import crosslooper
+import crosslooperpresets
 
 __version__ = crosslooper.__version__
 __author__ = crosslooper.__author__
@@ -35,7 +36,15 @@ def cli_parser(**ka):
       action='store',
       default=None,
       type=str,
-      help="TOML file containing presets for looping audio files. (default: no presets)")
+      help="TOML file containing presets for looping audio files. (default: use game title)")
+  if 'gametitle' not in ka:
+    parser.add_argument(
+      '--gametitle',
+      dest='gametitle',
+      action='store',
+      default=None,
+      type=str,
+      help="Title of game, used to find presets.")
   if 'threads' not in ka:
     parser.add_argument(
       '--threads',
@@ -99,10 +108,21 @@ def file_offset_dir(**ka):
 
   presets = {}
   presetconf = ka['presetconf']
+  gametitle = ka['gametitle']
   presets_tmp = {}
+
+  # Find preset file for game title
+  if presetconf is None and gametitle is not None:
+    presetconf = crosslooperpresets.get_preset(gametitle)
+    if presetconf is None:
+      raise Exception(f'Preset not found for "{gametitle}"')
+
+  # Open preset file
   if presetconf is not None:
     with open(presetconf, "rb") as f:
       presets_tmp = tomllib.load(f)
+
+  # Validate preset file
   for trackname in presets_tmp:
     presets[trackname.lower()] = {}
     for option in presets_tmp[trackname]:
