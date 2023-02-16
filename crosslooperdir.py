@@ -27,9 +27,9 @@ def cli_parser(**ka):
       '--indir',
       dest='indir',
       action='store',
-      default='Audio/BGM',
+      default=None,
       type=str,
-      help="Directory containing audio files to loop. (default: 'Audio/BGM')")
+      help="Directory containing audio files to loop. (default: detect based on game engine)")
   if 'presetconf' not in ka:
     parser.add_argument(
       '--presetconf',
@@ -46,6 +46,14 @@ def cli_parser(**ka):
       default=None,
       type=str,
       help="Title of game, used to find presets.")
+  if 'gamedir' not in ka:
+    parser.add_argument(
+      '--gamedir',
+      dest='gamedir',
+      action='store',
+      default='.',
+      type=str,
+      help="Directory containing game files. (default: current working directory)")
   if 'threads' not in ka:
     parser.add_argument(
       '--threads',
@@ -90,15 +98,29 @@ def file_offset_dir(**ka):
   args = parser.parse_args().__dict__
   ka.update(args)
 
-  path = ka['indir']
-  path = Path(path)
-  path = path.resolve()
-  if not path.exists():
-    raise Exception(f'Folder "{path}" does not exist.')
-  if path.is_file():
-    raise Exception(f'Folder "{path}" is a file.')
+  # Validate game dir
+  gamedir = ka['gamedir']
+  gamedir = Path(gamedir)
+  gamedir = gamedir.resolve()
+  if not gamedir.exists():
+    raise Exception(f'Folder "{gamedir}" does not exist.')
+  if gamedir.is_file():
+    raise Exception(f'Folder "{gamedir}" is a file.')
 
-  files = list(path.glob(f"**/*"))
+  # Validate BGM dir
+  indir = ka['indir']
+  if indir is None:
+    # RGSS default
+    indir = gamedir / 'Audio' / 'BGM'
+  else:
+    indir = Path(indir)
+  indir = indir.resolve()
+  if not indir.exists():
+    raise Exception(f'Folder "{indir}" does not exist.')
+  if indir.is_file():
+    raise Exception(f'Folder "{indir}" is a file.')
+
+  files = list(indir.glob(f"**/*"))
 
   pbar_lock = Lock()
   tqdm.set_lock(pbar_lock)
@@ -110,9 +132,8 @@ def file_offset_dir(**ka):
 
   # Detect game title
   if gametitle is None:
-    inidir = Path('.')
-    inidir = inidir.resolve()
-    inipaths = inidir.glob('*.ini')
+    # RGSS default
+    inipaths = gamedir.glob('*.ini')
 
     for i in inipaths:
       gameini = configparser.ConfigParser()
