@@ -282,6 +282,7 @@ def file_offset(use_argparse = True, **ka):
   in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
   if in2 is None:
     in2 = in1
+  in1,in2 = pathlib.Path(in1),pathlib.Path(in2)
   normalize,denoise,lowpass,samples = ka['normalize'],ka['denoise'],ka['lowpass'],ka['samples']
   loop,loopstart,loopstartmax,loopendmin,looplenmin = ka['loop'],ka['loopstart'],ka['loopstartmax'],ka['loopendmin'],ka['looplenmin']
   loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
