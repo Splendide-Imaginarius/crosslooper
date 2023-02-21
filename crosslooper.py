@@ -295,7 +295,7 @@ def file_offset(use_argparse = True, **ka):
       return in1, None
 
   if loop and not loopforce:
-    if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
+    if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf and 'LOOP_START' in mf and 'LOOP_END' in mf:
       print_maybe('Loop tags already present, skipping')
       return in1, None
 
@@ -304,6 +304,23 @@ def file_offset(use_argparse = True, **ka):
     return in1, None
 
   sample_rate,s1,s2 = read_normalized(in1,in2)
+
+  if loop and not loopforce:
+    if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
+      if 'LOOP_START' not in mf or 'LOOP_END' not in mf:
+        print_maybe('Converting samples loop tags to seconds loop tags, skipping')
+        mf['LOOP_START'] = [str(float(mf['LOOPSTART'][0]) / sample_rate)]
+        mf['LOOP_END'] = [str( (float(mf['LOOPSTART'][0]) + float(mf['LOOPLENGTH'][0])) / sample_rate)]
+        mf.save()
+        return in1, None
+    if 'LOOP_START' in mf and 'LOOP_END' in mf:
+      if 'LOOPSTART' not in mf or 'LOOPLENGTH' not in mf:
+        print_maybe('Converting seconds loop tags to samples loop tags, skipping')
+        mf['LOOPSTART'] = [str(int(float(mf['LOOP_START'][0]) * sample_rate))]
+        mf['LOOPLENGTH'] = [str(int( (float(mf['LOOP_END'][0]) - float(mf['LOOP_START'][0])) * sample_rate))]
+        mf.save()
+        return in1, None
+
   if loop:
     best_ca = 0
     best_normalized_ca = 0
@@ -384,6 +401,8 @@ def file_offset(use_argparse = True, **ka):
     print_maybe(sync_text)
     mf['LOOPSTART'] = [str(best_start)]
     mf['LOOPLENGTH'] = [str(best_length)]
+    mf['LOOP_START'] = [str(best_start / sample_rate)]
+    mf['LOOP_END'] = [str(best_end / sample_rate)]
     mf.save()
   else:
     print_maybe(sync_text%(file,offset))

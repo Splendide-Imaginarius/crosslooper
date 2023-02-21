@@ -1,6 +1,6 @@
 # CrossLooper
 
-CrossLooper is a tool for automatically setting the `LOOPSTART` and `LOOPLENGTH` metadata tags in audio files. These tags are used by various software (including RPG Maker) to seamlessly loop audio (e.g. for game BGM). CrossLooper uses statistical cross-correlation to guess the correct loop points. Among other use cases, CrossLooper may be useful for game developers who are given BGM assets that don't have loop points, or for game modders who want to add loop points to games whose BGM doesn't have them.
+CrossLooper is a tool for automatically setting the `LOOPSTART`, `LOOPLENGTH`, `LOOP_START`, and `LOOP_END` metadata tags in audio files. These tags are used by various software (including RPG Maker) to seamlessly loop audio (e.g. for game BGM). CrossLooper uses statistical cross-correlation to guess the correct loop points. Among other use cases, CrossLooper may be useful for game developers who are given BGM assets that don't have loop points, or for game modders who want to add loop points to games whose BGM doesn't have them.
 
 ## How to use
 
