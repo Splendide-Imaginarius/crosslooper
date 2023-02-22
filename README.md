@@ -6,29 +6,65 @@ CrossLooper is a tool for automatically setting the `LOOPSTART`, `LOOPLENGTH`, `
 
 To install via pip, do this from the `crosslooper` repo directory:
 
-~~~
+```
 pip install --user .
-~~~
+```
 
-## How to use
+## Usage
 
 The audio files must be of a container format that supports Vorbis Comment metadata. In practice, this means that Ogg files and FLAC files will work. If your audio files are in some other container format (e.g. MP3), you'll need to convert them first.
+
+### As a game developer
+
+If you're a game developer, you can use CrossLooper to set loop points on your BGM files before distributing your game.
 
 Typically (~76% of the time), you can run CrossLooper with no hints, and it will guess the loop points correctly:
 
 ```
-crosslooper.py example.ogg
+crosslooper example.ogg
 ```
 
-CrossLooper will edit the input file in-place to add loop tags.
+CrossLooper will edit the input file in-place to add loop tags. You can do this for each BGM file.
 
 If it gets the loop points wrong, you can pass a variety of flags to help CrossLooper guess the correct loop points. See the help for details:
 
 ```
-crosslooper.py --help
+crosslooper --help
 ```
 
-Usually, the `--looplenmin` hint is the only one you will need, but the others may be helpful too.
+Usually, the `--looplenmin` hint is the only one you will need, but the others may be helpful too. If you're having trouble, you may wish to pass `--verbose` to see logs of which loop point candidates are being considered. If you've already set wrong loop points and want to overwrite them, pass the `--loopforce` flag.
+
+### As a game mod developer
+
+If you're a game mod developer, you can use CrossLooper to find the loop points of the BGM in an existing, already-released game.
+
+Follow the instructions for "As a game developer", but keep track of which command-line flags you set for each file. Then, create a new `.conf` file in the `crosslooperpresets` that contains the flags you used for each file. The `.conf` file should be named with a substring of the game title, excluding any version numbers. If the game has multiple titles (e.g. for Japanese and English localized versions), name the `.conf` file after the English version, and add a symlink for any other languages. For each file that was unloopable, set `skip = true`. You can look at the existing `.conf` files in that folder for inspiration.
+
+Once you've created the `.conf` file, follow the instructions for "As a game mod user" (starting with an unmodded game) to make sure everything works correctly. If so, please send in a PR so that I can add your `.conf` file to the repository.
+
+### As a game mod user
+
+If you're a gamer, you can use CrossLooper to apply loop point presets that game mod developers have submitted to this repository.
+
+From the directory of an RGSS (RPG Maker XP, VX, or VX Ace) game, run the following:
+
+```
+crosslooperdir
+```
+
+CrossLooper will edit all of the game's BGM files in-place to add loop points.
+
+For RPG Maker MV and newer, you need to add a command-line flag:
+
+```
+crosslooperdir --gameenginever MV
+```
+
+For more details on the other command-line flags available, see See the help:
+
+```
+crosslooperdir --help
+```
 
 ## Testing Results
 
