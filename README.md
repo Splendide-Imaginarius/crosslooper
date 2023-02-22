@@ -30,6 +30,15 @@ crosslooper.py --help
 
 Usually, the `--looplenmin` hint is the only one you will need, but the others may be helpful too.
 
+## Testing Results
+
+To play a tagged `.ogg` audio file, you can do one of the following:
+
+* Replace the title screen `.ogg` file of an RPG Maker game with the tagged audio file you created; then launch the RPG Maker game.
+* Play the `.ogg` file with [loop-ogg](https://github.com/SolraBizna/loop-ogg).
+
+I am not currently aware of any `.flac` players that support loop points; please let me know if there exist any.
+
 ## Standards
 
 CrossLooper sets both seconds-denominated loop points and samples-denominated loop points. [Further explanation is here.](https://github.com/SolraBizna/loop-ogg#what) RPG Maker only uses samples-denominated loop points and will ignore seconds-denominated loop points.
