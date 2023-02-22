@@ -22,6 +22,10 @@ crosslooper.py --help
 
 Usually, the `--looplenmin` hint is the only one you will need, but the others may be helpful too.
 
+## Standards
+
+CrossLooper sets both seconds-denominated loop points and samples-denominated loop points. [Further explanation is here.](https://github.com/SolraBizna/loop-ogg#what) RPG Maker only uses samples-denominated loop points and will ignore seconds-denominated loop points.
+
 ## Credits
 
 Copyright 2023 Splendide Imaginarius.
