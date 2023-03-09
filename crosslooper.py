@@ -7,11 +7,8 @@ from scipy import fft
 from scipy.io import wavfile
 import tempfile
 import math
-import os
 import pathlib
 import subprocess
-import sys
-import statistics
 import mutagen
 from mutagen import ogg, flac
 from tqdm import tqdm
