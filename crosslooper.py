@@ -74,7 +74,7 @@ def normalize_denoise(infile, outname):
             infile, outfile = outfile, o(outfile)
             in_out(ffmpeglow % lowpass, infile, outfile)
         r, s = wavfile.read(outfile)
-        if len(s.shape)>1: #stereo
+        if len(s.shape) > 1: #stereo
             s = s[:, 0]
         return r, s
 
