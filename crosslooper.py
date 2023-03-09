@@ -43,7 +43,7 @@ ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
                    '-c:a:0 pcm_s16le -c:s copy "{}"')
 ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
-o = lambda x: '%s%s'%(x, '.wav')
+o = lambda x: '%s%s' % (x, '.wav')
 
 def print_maybe(*s, **ka):
     if verbose:
@@ -51,13 +51,13 @@ def print_maybe(*s, **ka):
 
 def in_out(command, infile, outfile):
     hdr = '-'*len(command)
-    print_maybe("%s\n%s\n%s"%(hdr, command, hdr))
+    print_maybe("%s\n%s\n%s" % (hdr, command, hdr))
     subprocess.check_call(command.format(infile, outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
 
 def normalize_denoise(infile, outname):
     with tempfile.TemporaryDirectory() as tempdir:
         outfile = o(pathlib.Path(tempdir)/outname)
-        ffmpegwav_take = ffmpegwav%('-t %s'%take) if take is not None else ffmpegwav%('')
+        ffmpegwav_take = ffmpegwav % ('-t %s' % take) if take is not None else ffmpegwav % ('')
         in_out(ffmpegwav_take, infile, outfile)
         if normalize:
             infile, outfile = outfile, o(outfile)
@@ -69,7 +69,7 @@ def normalize_denoise(infile, outname):
             in_out(ffmpegdenoise, infile, outfile)
         if int(lowpass):
             infile, outfile = outfile, o(outfile)
-            in_out(ffmpeglow%lowpass, infile, outfile)
+            in_out(ffmpeglow % lowpass, infile, outfile)
         r, s = wavfile.read(outfile)
         if len(s.shape)>1: #stereo
             s = s[:, 0]
@@ -388,10 +388,10 @@ def file_offset(use_argparse = True, **ka):
 ==============================================================================
 """
     if xmax > padsize // 2:
-        if show: show2(sample_rate, s1, s2[padsize-xmax:], title='1st=blue;2nd=red=cut(%s;%s)'%(in1, in2))
+        if show: show2(sample_rate, s1, s2[padsize-xmax:], title='1st=blue;2nd=red=cut(%s;%s)' % (in1, in2))
         file, offset = in2, (padsize-xmax)
     else:
-        if show: show2(sample_rate, s1[xmax:], s2, title='1st=blue=cut;2nd=red (%s;%s)'%(in1, in2))
+        if show: show2(sample_rate, s1[xmax:], s2, title='1st=blue=cut;2nd=red (%s;%s)' % (in1, in2))
         file, offset = in1, xmax
     if not samples:
         offset = offset / sample_rate
@@ -403,7 +403,7 @@ def file_offset(use_argparse = True, **ka):
         mf['LOOP_END'] = [str(best_end / sample_rate)]
         mf.save()
     else:
-        print_maybe(sync_text%(file, offset))
+        print_maybe(sync_text % (file, offset))
     return file, offset
 
 main = file_offset
