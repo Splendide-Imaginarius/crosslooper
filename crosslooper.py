@@ -475,6 +475,7 @@ def file_offset(use_argparse=True, **ka):
         print_maybe(sync_text % (file, offset))
     return file, offset
 
+
 main = file_offset
 if __name__ == '__main__':
     main()
