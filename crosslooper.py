@@ -102,10 +102,13 @@ def fig1(title=None):
 
 
 def show1(fs, s, color=None, title=None, v=None):
-    if not color: fig1(title)
-    if ax and v: ax.axvline(x=v, color='green')
+    if not color:
+        fig1(title)
+    if ax and v:
+        ax.axvline(x=v, color='green')
     plt.plot(np.arange(len(s))/fs, s, color or 'black')
-    if not color: plt.show()
+    if not color:
+        plt.show()
 
 
 def show2(fs, s1, s2, title=None):
@@ -429,7 +432,8 @@ def file_offset(use_argparse = True, **ka):
                     "normalized_confidence", best_normalized_ca)
     else:
         ls1, ls2, padsize, xmax, ca = corrabs(s1, s2)
-    if show: show1(sample_rate, ca, title='Correlation', v=xmax/sample_rate)
+    if show:
+        show1(sample_rate, ca, title='Correlation', v=xmax/sample_rate)
     if loop:
         sync_text = f"""
 ==============================================================================
