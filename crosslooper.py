@@ -43,37 +43,37 @@ ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
                    '-c:a:0 pcm_s16le -c:s copy "{}"')
 ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
-o = lambda x: '%s%s'%(x,'.wav')
+o = lambda x: '%s%s'%(x, '.wav')
 
 def print_maybe(*s, **ka):
     if verbose:
         print(*s, **ka)
 
-def in_out(command,infile,outfile):
+def in_out(command, infile, outfile):
     hdr = '-'*len(command)
-    print_maybe("%s\n%s\n%s"%(hdr,command,hdr))
-    subprocess.check_call(command.format(infile,outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
+    print_maybe("%s\n%s\n%s"%(hdr, command, hdr))
+    subprocess.check_call(command.format(infile, outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
 
-def normalize_denoise(infile,outname):
+def normalize_denoise(infile, outname):
     with tempfile.TemporaryDirectory() as tempdir:
         outfile = o(pathlib.Path(tempdir)/outname)
         ffmpegwav_take = ffmpegwav%('-t %s'%take) if take is not None else ffmpegwav%('')
-        in_out(ffmpegwav_take,infile,outfile)
+        in_out(ffmpegwav_take, infile, outfile)
         if normalize:
-            infile, outfile = outfile,o(outfile)
-            in_out(ffmpegnormalize,infile,outfile)
+            infile, outfile = outfile, o(outfile)
+            in_out(ffmpegnormalize, infile, outfile)
         if denoise:
-            infile, outfile = outfile,o(outfile)
-            in_out(ffmpegdenoise,infile,outfile)
-            infile, outfile = outfile,o(outfile)
-            in_out(ffmpegdenoise,infile,outfile)
+            infile, outfile = outfile, o(outfile)
+            in_out(ffmpegdenoise, infile, outfile)
+            infile, outfile = outfile, o(outfile)
+            in_out(ffmpegdenoise, infile, outfile)
         if int(lowpass):
-            infile, outfile = outfile,o(outfile)
-            in_out(ffmpeglow%lowpass,infile,outfile)
-        r,s = wavfile.read(outfile)
+            infile, outfile = outfile, o(outfile)
+            in_out(ffmpeglow%lowpass, infile, outfile)
+        r, s = wavfile.read(outfile)
         if len(s.shape)>1: #stereo
-            s = s[:,0]
-        return r,s
+            s = s[:, 0]
+        return r, s
 
 def fig1(title=None):
     fig = plt.figure(1)
@@ -89,33 +89,33 @@ def fig1(title=None):
 
 def show1(fs, s, color=None, title=None, v=None):
     if not color: fig1(title)
-    if ax and v: ax.axvline(x=v,color='green')
+    if ax and v: ax.axvline(x=v, color='green')
     plt.plot(np.arange(len(s))/fs, s, color or 'black')
     if not color: plt.show()
 
-def show2(fs,s1,s2,title=None):
+def show2(fs, s1, s2, title=None):
     fig1(title)
-    show1(fs,s1,'blue')
-    show1(fs,s2,'red')
+    show1(fs, s1, 'blue')
+    show1(fs, s2, 'red')
     plt.show()
 
-def read_normalized(in1,in2):
+def read_normalized(in1, in2):
     global normalize
-    r1,s1 = normalize_denoise(in1,'out1')
+    r1, s1 = normalize_denoise(in1, 'out1')
     if in1 == in2:
-        r2,s2 = r1,s1
+        r2, s2 = r1, s1
     else:
-        r2,s2 = normalize_denoise(in2,'out2')
+        r2, s2 = normalize_denoise(in2, 'out2')
     if r1 != r2:
-        old,normalize = normalize,True
-        r1,s1 = normalize_denoise(in1,'out1')
-        r2,s2 = normalize_denoise(in2,'out2')
+        old, normalize = normalize, True
+        r1, s1 = normalize_denoise(in1, 'out1')
+        r2, s2 = normalize_denoise(in2, 'out2')
         normalize = old
     assert r1 == r2, "not same sample rate"
     fs = r1
-    return fs,s1,s2
+    return fs, s1, s2
 
-def corrabs(s1,s2):
+def corrabs(s1, s2):
     ls1 = len(s1)
     ls2 = len(s2)
     padsize = ls1+ls2+1
@@ -127,7 +127,7 @@ def corrabs(s1,s2):
     corr = fft.ifft(fft.fft(s1pad)*np.conj(fft.fft(s2pad)))
     ca = np.absolute(corr)
     xmax = np.argmax(ca)
-    return ls1,ls2,padsize,xmax,ca
+    return ls1, ls2, padsize, xmax, ca
 
 def cli_parser(**ka):
     import argparse
@@ -147,35 +147,35 @@ def cli_parser(**ka):
             help='Second media file to loop; you probably don\'t want this. (default: use first file)')
     if 'take' not in ka:
         parser.add_argument(
-            '-t','--take',
+            '-t', '--take',
             dest='take',
             action='store',
             default=None,
             help='Take X seconds of the inputs to look at. (default: entire input)')
     if 'show' not in ka:
         parser.add_argument(
-            '-s','--show',
+            '-s', '--show',
             dest='show',
             action='store_true',
             default=False,
             help='Turn off "show diagrams", in case you are confident.')
     if 'normalize' not in ka:
         parser.add_argument(
-            '-n','--normalize',
+            '-n', '--normalize',
             dest='normalize',
             action='store_true',
             default=False,
             help='Turn on normalize. It turns on by itself in a second pass, if sampling rates differ.')
     if 'denoise' not in ka:
         parser.add_argument(
-            '-d','--denoise',
+            '-d', '--denoise',
             dest='denoise',
             action='store_true',
             default=False,
             help='Turns on denoise, as experiment in case of failure.')
     if 'lowpass' not in ka:
         parser.add_argument(
-            '-l','--lowpass',
+            '-l', '--lowpass',
             dest='lowpass',
             action='store',
             default=0,
@@ -259,7 +259,7 @@ def cli_parser(**ka):
             help='Skip this audio file. (default: process file)')
     if 'verbose' not in ka:
         parser.add_argument(
-            '-v','--verbose',
+            '-v', '--verbose',
             dest='verbose',
             action='store_true',
             default=False,
@@ -276,15 +276,15 @@ def file_offset(use_argparse = True, **ka):
         args = parser.parse_args().__dict__
         ka.update(args)
 
-    global take,normalize,denoise,lowpass,samples,loop,loopstart,loopstartmax,loopendmin,looplenmin,loopsearchstep,loopsearchlen,loopforce,skip,verbose
-    in1,in2,take,show = ka['in1'],ka['in2'],ka['take'],ka['show']
+    global take, normalize, denoise, lowpass, samples, loop, loopstart, loopstartmax, loopendmin, looplenmin, loopsearchstep, loopsearchlen, loopforce, skip, verbose
+    in1, in2, take, show = ka['in1'], ka['in2'], ka['take'], ka['show']
     if in2 is None:
         in2 = in1
-    in1,in2 = pathlib.Path(in1),pathlib.Path(in2)
-    normalize,denoise,lowpass,samples = ka['normalize'],ka['denoise'],ka['lowpass'],ka['samples']
-    loop,loopstart,loopstartmax,loopendmin,looplenmin = ka['loop'],ka['loopstart'],ka['loopstartmax'],ka['loopendmin'],ka['looplenmin']
-    loopsearchstep,loopsearchlen = ka['loopsearchstep'],ka['loopsearchlen']
-    loopforce,skip,verbose = ka['loopforce'],ka['skip'],ka['verbose']
+    in1, in2 = pathlib.Path(in1), pathlib.Path(in2)
+    normalize, denoise, lowpass, samples = ka['normalize'], ka['denoise'], ka['lowpass'], ka['samples']
+    loop, loopstart, loopstartmax, loopendmin, looplenmin = ka['loop'], ka['loopstart'], ka['loopstartmax'], ka['loopendmin'], ka['looplenmin']
+    loopsearchstep, loopsearchlen = ka['loopsearchstep'], ka['loopsearchlen']
+    loopforce, skip, verbose = ka['loopforce'], ka['skip'], ka['verbose']
 
     if loop:
         mf = mutagen.File(in1)
@@ -301,7 +301,7 @@ def file_offset(use_argparse = True, **ka):
         print_maybe('Skipping')
         return in1, None
 
-    sample_rate,s1,s2 = read_normalized(in1,in2)
+    sample_rate, s1, s2 = read_normalized(in1, in2)
 
     if loop and not loopforce:
         if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
@@ -346,7 +346,7 @@ def file_offset(use_argparse = True, **ka):
             this_start = init_start + search_offset
             this_end_min = init_end_min + search_offset
             candidate = corrabs(s1[this_start:][:searchlen_samples], s2[this_end_min:])
-            ls1,ls2,padsize,xmax,ca = candidate
+            ls1, ls2, padsize, xmax, ca = candidate
             this_ca = max(ca)
             this_normalized_ca = this_ca / (searchlen_samples * (len(s2) - this_end_min))
             this_end = this_end_min + (padsize - xmax)
@@ -367,8 +367,8 @@ def file_offset(use_argparse = True, **ka):
             pbar.update(loopsearchstep)
         print_maybe("best", "start", best_start, "end", best_end, "length", best_length, "confidence", best_ca, "normalized_confidence", best_normalized_ca)
     else:
-        ls1,ls2,padsize,xmax,ca = corrabs(s1,s2)
-    if show: show1(sample_rate,ca,title='Correlation',v=xmax/sample_rate)
+        ls1, ls2, padsize, xmax, ca = corrabs(s1, s2)
+    if show: show1(sample_rate, ca, title='Correlation', v=xmax/sample_rate)
     if loop:
         sync_text = f"""
 ==============================================================================
@@ -388,11 +388,11 @@ def file_offset(use_argparse = True, **ka):
 ==============================================================================
 """
     if xmax > padsize // 2:
-        if show: show2(sample_rate,s1,s2[padsize-xmax:],title='1st=blue;2nd=red=cut(%s;%s)'%(in1,in2))
-        file,offset = in2,(padsize-xmax)
+        if show: show2(sample_rate, s1, s2[padsize-xmax:], title='1st=blue;2nd=red=cut(%s;%s)'%(in1, in2))
+        file, offset = in2, (padsize-xmax)
     else:
-        if show: show2(sample_rate,s1[xmax:],s2,title='1st=blue=cut;2nd=red (%s;%s)'%(in1,in2))
-        file,offset = in1,xmax
+        if show: show2(sample_rate, s1[xmax:], s2, title='1st=blue=cut;2nd=red (%s;%s)'%(in1, in2))
+        file, offset = in1, xmax
     if not samples:
         offset = offset / sample_rate
     if loop:
@@ -403,8 +403,8 @@ def file_offset(use_argparse = True, **ka):
         mf['LOOP_END'] = [str(best_end / sample_rate)]
         mf.save()
     else:
-        print_maybe(sync_text%(file,offset))
-    return file,offset
+        print_maybe(sync_text%(file, offset))
+    return file, offset
 
 main = file_offset
 if __name__ == '__main__':
