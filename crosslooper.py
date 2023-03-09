@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import matplotlib
-matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy import fft
@@ -16,6 +15,8 @@ import statistics
 import mutagen
 from mutagen import ogg, flac
 from tqdm import tqdm
+
+matplotlib.use('TkAgg')
 
 __version__ = "1.0.1"
 __author__ = """Splendide Imaginarius"""
