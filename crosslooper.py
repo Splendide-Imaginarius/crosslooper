@@ -45,14 +45,17 @@ ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
 o = lambda x: '%s%s' % (x, '.wav')
 
+
 def print_maybe(*s, **ka):
     if verbose:
         print(*s, **ka)
+
 
 def in_out(command, infile, outfile):
     hdr = '-'*len(command)
     print_maybe("%s\n%s\n%s" % (hdr, command, hdr))
     subprocess.check_call(command.format(infile, outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
+
 
 def normalize_denoise(infile, outname):
     with tempfile.TemporaryDirectory() as tempdir:
@@ -75,6 +78,7 @@ def normalize_denoise(infile, outname):
             s = s[:, 0]
         return r, s
 
+
 def fig1(title=None):
     fig = plt.figure(1)
     plt.margins(0, 0.1)
@@ -87,17 +91,20 @@ def fig1(title=None):
     global ax
     ax = axs[0]
 
+
 def show1(fs, s, color=None, title=None, v=None):
     if not color: fig1(title)
     if ax and v: ax.axvline(x=v, color='green')
     plt.plot(np.arange(len(s))/fs, s, color or 'black')
     if not color: plt.show()
 
+
 def show2(fs, s1, s2, title=None):
     fig1(title)
     show1(fs, s1, 'blue')
     show1(fs, s2, 'red')
     plt.show()
+
 
 def read_normalized(in1, in2):
     global normalize
@@ -115,6 +122,7 @@ def read_normalized(in1, in2):
     fs = r1
     return fs, s1, s2
 
+
 def corrabs(s1, s2):
     ls1 = len(s1)
     ls2 = len(s2)
@@ -128,6 +136,7 @@ def corrabs(s1, s2):
     ca = np.absolute(corr)
     xmax = np.argmax(ca)
     return ls1, ls2, padsize, xmax, ca
+
 
 def cli_parser(**ka):
     import argparse
@@ -265,6 +274,7 @@ def cli_parser(**ka):
             default=False,
             help='Verbose output. (default: only show progress indicator)')
     return parser
+
 
 def file_offset(use_argparse = True, **ka):
     """CLI interface to calculate loop metadata of an audio file.
