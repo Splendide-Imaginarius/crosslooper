@@ -154,7 +154,7 @@ def cli_parser(**ka):
     from argparse import ArgumentParser, RawDescriptionHelpFormatter
     parser = ArgumentParser(description=file_offset.__doc__,
                             formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument('--version', action='version', version = __version__)
+    parser.add_argument('--version', action='version', version=__version__)
 
     if 'in1' not in ka:
         parser.add_argument(
@@ -292,7 +292,7 @@ def cli_parser(**ka):
     return parser
 
 
-def file_offset(use_argparse = True, **ka):
+def file_offset(use_argparse=True, **ka):
     """CLI interface to calculate loop metadata of an audio file.
     ffmpeg needs to be available.
     """
