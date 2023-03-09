@@ -373,7 +373,6 @@ def file_offset(use_argparse=True, **ka):
         best_start_seconds = 0.0
         best_end = 0
         best_end_seconds = 0.0
-        all_ends = []
         searchlen_samples = int(loopsearchlen*sample_rate)
         init_start = int(loopstart*sample_rate)
         init_end_min = int(loopendmin*sample_rate)
