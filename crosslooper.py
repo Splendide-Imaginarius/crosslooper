@@ -145,7 +145,7 @@ def corrabs(s1, s2):
 def cli_parser(**ka):
     import argparse
     parser = argparse.ArgumentParser(description=file_offset.__doc__,
-                                            formatter_class=argparse.RawDescriptionHelpFormatter)
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--version', action='version', version = __version__)
 
     if 'in1' not in ka:
