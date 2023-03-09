@@ -479,4 +479,3 @@ def file_offset(use_argparse=True, **ka):
 main = file_offset
 if __name__ == '__main__':
     main()
-
