@@ -18,7 +18,7 @@ matplotlib.use('TkAgg')
 __version__ = "1.0.1"
 __author__ = """Splendide Imaginarius"""
 
-#global
+# Globals
 ax = None
 take = None
 normalize = False
