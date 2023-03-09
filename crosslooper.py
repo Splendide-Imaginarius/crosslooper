@@ -43,7 +43,10 @@ ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
                    '-c:a:0 pcm_s16le -c:s copy "{}"')
 ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
-o = lambda x: '%s%s' % (x, '.wav')
+
+
+def o(x):
+    return '%s%s' % (x, '.wav')
 
 
 def print_maybe(*s, **ka):
