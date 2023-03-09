@@ -38,8 +38,10 @@ verbose = False
 
 ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
 ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
-                   "'[0:0]loudnorm=i=-23.0:lra=7.0:tp=-2.0:offset=4.45:linear=true:print_format=json[norm0]' " +
-                   "-map_metadata 0 -map_metadata:s:a:0 0:s:a:0 -map_chapters 0 -c:v copy -map '[norm0]' " +
+                   "'[0:0]loudnorm=i=-23.0:lra=7.0:tp=-2.0:offset=4.45:" +
+                   "linear=true:print_format=json[norm0]' " +
+                   "-map_metadata 0 -map_metadata:s:a:0 0:s:a:0 " +
+                   "-map_chapters 0 -c:v copy -map '[norm0]' " +
                    '-c:a:0 pcm_s16le -c:s copy "{}"')
 ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
 ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
@@ -57,13 +59,16 @@ def print_maybe(*s, **ka):
 def in_out(command, infile, outfile):
     hdr = '-'*len(command)
     print_maybe("%s\n%s\n%s" % (hdr, command, hdr))
-    subprocess.check_call(command.format(infile, outfile), stdout=(None if verbose else subprocess.DEVNULL), stderr=(None if verbose else subprocess.DEVNULL))
+    subprocess.check_call(command.format(infile, outfile),
+                          stdout=(None if verbose else subprocess.DEVNULL),
+                          stderr=(None if verbose else subprocess.DEVNULL))
 
 
 def normalize_denoise(infile, outname):
     with tempfile.TemporaryDirectory() as tempdir:
         outfile = o(pathlib.Path(tempdir)/outname)
-        ffmpegwav_take = ffmpegwav % ('-t %s' % take) if take is not None else ffmpegwav % ('')
+        ffmpegwav_take = (ffmpegwav % ('-t %s' % take) if take is not None
+                          else ffmpegwav % (''))
         in_out(ffmpegwav_take, infile, outfile)
         if normalize:
             infile, outfile = outfile, o(outfile)
@@ -143,9 +148,9 @@ def corrabs(s1, s2):
 
 
 def cli_parser(**ka):
-    import argparse
-    parser = argparse.ArgumentParser(description=file_offset.__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    parser = ArgumentParser(description=file_offset.__doc__,
+                            formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--version', action='version', version = __version__)
 
     if 'in1' not in ka:
@@ -157,14 +162,16 @@ def cli_parser(**ka):
             'in2',
             default=None,
             nargs='?',
-            help='Second media file to loop; you probably don\'t want this. (default: use first file)')
+            help='Second media file to loop; you probably don\'t want this. ' +
+                 '(default: use first file)')
     if 'take' not in ka:
         parser.add_argument(
             '-t', '--take',
             dest='take',
             action='store',
             default=None,
-            help='Take X seconds of the inputs to look at. (default: entire input)')
+            help='Take X seconds of the inputs to look at. ' +
+                 '(default: entire input)')
     if 'show' not in ka:
         parser.add_argument(
             '-s', '--show',
@@ -178,7 +185,8 @@ def cli_parser(**ka):
             dest='normalize',
             action='store_true',
             default=False,
-            help='Turn on normalize. It turns on by itself in a second pass, if sampling rates differ.')
+            help='Turn on normalize. It turns on by itself in a second ' +
+                 'pass, if sampling rates differ.')
     if 'denoise' not in ka:
         parser.add_argument(
             '-d', '--denoise',
@@ -262,7 +270,8 @@ def cli_parser(**ka):
             dest='loopforce',
             action='store_true',
             default=False,
-            help='Overwrite existing loop tags. (default: skip files with existing loop tags)')
+            help='Overwrite existing loop tags. ' +
+                 '(default: skip files with existing loop tags)')
     if 'skip' not in ka:
         parser.add_argument(
             '--skip',
@@ -290,13 +299,19 @@ def file_offset(use_argparse = True, **ka):
         args = parser.parse_args().__dict__
         ka.update(args)
 
-    global take, normalize, denoise, lowpass, samples, loop, loopstart, loopstartmax, loopendmin, looplenmin, loopsearchstep, loopsearchlen, loopforce, skip, verbose
+    global take, normalize, denoise, lowpass, samples, loop
+    global loopstart, loopstartmax, loopendmin, looplenmin
+    global loopsearchstep, loopsearchlen
+    global loopforce, skip, verbose
     in1, in2, take, show = ka['in1'], ka['in2'], ka['take'], ka['show']
     if in2 is None:
         in2 = in1
     in1, in2 = pathlib.Path(in1), pathlib.Path(in2)
-    normalize, denoise, lowpass, samples = ka['normalize'], ka['denoise'], ka['lowpass'], ka['samples']
-    loop, loopstart, loopstartmax, loopendmin, looplenmin = ka['loop'], ka['loopstart'], ka['loopstartmax'], ka['loopendmin'], ka['looplenmin']
+    normalize, denoise, lowpass = ka['normalize'], ka['denoise'], ka['lowpass']
+    samples = ka['samples']
+    loop = ka['loop']
+    loopstart, loopstartmax = ka['loopstart'], ka['loopstartmax']
+    loopendmin, looplenmin = ka['loopendmin'], ka['looplenmin']
     loopsearchstep, loopsearchlen = ka['loopsearchstep'], ka['loopsearchlen']
     loopforce, skip, verbose = ka['loopforce'], ka['skip'], ka['verbose']
 
@@ -307,9 +322,12 @@ def file_offset(use_argparse = True, **ka):
             return in1, None
 
     if loop and not loopforce:
-        if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf and 'LOOP_START' in mf and 'LOOP_END' in mf:
-            print_maybe('Loop tags already present, skipping')
-            return in1, None
+        # Check for samples-denominated tags.
+        if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
+            # Check for seconds-denominated tags.
+            if 'LOOP_START' in mf and 'LOOP_END' in mf:
+                print_maybe('Loop tags already present, skipping')
+                return in1, None
 
     if skip:
         print_maybe('Skipping')
@@ -320,16 +338,28 @@ def file_offset(use_argparse = True, **ka):
     if loop and not loopforce:
         if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
             if 'LOOP_START' not in mf or 'LOOP_END' not in mf:
-                print_maybe('Converting samples loop tags to seconds loop tags, skipping')
-                mf['LOOP_START'] = [str(float(mf['LOOPSTART'][0]) / sample_rate)]
-                mf['LOOP_END'] = [str( (float(mf['LOOPSTART'][0]) + float(mf['LOOPLENGTH'][0])) / sample_rate)]
+                print_maybe('Converting samples loop tags to ' +
+                            'seconds loop tags, skipping')
+                best_start = float(mf['LOOPSTART'][0])
+                best_start_seconds = best_start / sample_rate
+                best_length = float(mf['LOOPLENGTH'][0])
+                best_end = best_start + best_length
+                best_end_seconds = best_end / sample_rate
+                mf['LOOP_START'] = [str(best_start_seconds)]
+                mf['LOOP_END'] = [str(best_end_seconds)]
                 mf.save()
                 return in1, None
         if 'LOOP_START' in mf and 'LOOP_END' in mf:
             if 'LOOPSTART' not in mf or 'LOOPLENGTH' not in mf:
-                print_maybe('Converting seconds loop tags to samples loop tags, skipping')
-                mf['LOOPSTART'] = [str(int(float(mf['LOOP_START'][0]) * sample_rate))]
-                mf['LOOPLENGTH'] = [str(int( (float(mf['LOOP_END'][0]) - float(mf['LOOP_START'][0])) * sample_rate))]
+                print_maybe('Converting seconds loop tags to ' +
+                            'samples loop tags, skipping')
+                best_start_seconds = float(mf['LOOP_START'][0])
+                best_start = int(best_start_seconds * sample_rate)
+                best_end_seconds = float(mf['LOOP_END'][0])
+                best_length_seconds = best_end_seconds - best_start_seconds
+                best_length = int(best_length_seconds * sample_rate)
+                mf['LOOPSTART'] = [str(best_start)]
+                mf['LOOPLENGTH'] = [str(best_length)]
                 mf.save()
                 return in1, None
 
@@ -337,18 +367,23 @@ def file_offset(use_argparse = True, **ka):
         best_ca = 0
         best_normalized_ca = 0
         best_start = 0
+        best_start_seconds = 0.0
         best_end = 0
+        best_end_seconds = 0.0
         all_ends = []
         searchlen_samples = int(loopsearchlen*sample_rate)
         init_start = int(loopstart*sample_rate)
         init_end_min = int(loopendmin*sample_rate)
 
         # We don't want to only loop a tiny piece at the end of the file.
-        loopstartmax_samples = loopstartmax*sample_rate if loopstartmax is not None else math.inf
+        loopstartmax_samples = math.inf
+        if loopstartmax is not None:
+            loopstartmax_samples = loopstartmax*sample_rate
         loopstartmax_samples = int(min(loopstartmax_samples, len(s1) * 0.47))
 
         search_offset_max = len(s1) - searchlen_samples
-        search_offset_max = min(search_offset_max, loopstartmax_samples - init_start)
+        search_offset_max = min(search_offset_max,
+                                loopstartmax_samples - init_start)
         search_offset_max_seconds = search_offset_max / sample_rate
         loopsearchstep_samples = int(loopsearchstep * sample_rate)
 
@@ -356,13 +391,17 @@ def file_offset(use_argparse = True, **ka):
         pbar.set_description(in1.name)
         pbar.reset(total=search_offset_max_seconds)
 
-        for search_offset in range(0, search_offset_max, loopsearchstep_samples):
+        for search_offset in range(0,
+                                   search_offset_max,
+                                   loopsearchstep_samples):
             this_start = init_start + search_offset
             this_end_min = init_end_min + search_offset
-            candidate = corrabs(s1[this_start:][:searchlen_samples], s2[this_end_min:])
+            candidate = corrabs(s1[this_start:][:searchlen_samples],
+                                s2[this_end_min:])
             ls1, ls2, padsize, xmax, ca = candidate
             this_ca = max(ca)
-            this_normalized_ca = this_ca / (searchlen_samples * (len(s2) - this_end_min))
+            this_norm_magnitude = searchlen_samples * (len(s2) - this_end_min)
+            this_normalized_ca = this_ca / this_norm_magnitude
             this_end = this_end_min + (padsize - xmax)
             this_length = this_end - this_start
             if this_end > len(s1):
@@ -375,18 +414,26 @@ def file_offset(use_argparse = True, **ka):
                 best_ca = this_ca
                 best_normalized_ca = this_normalized_ca
                 best_start = this_start
+                best_start_seconds = best_start / sample_rate
                 best_end = this_end
+                best_end_seconds = best_end / sample_rate
                 best_length = this_length
-            print_maybe("offset", search_offset, "start", this_start, "end", this_end, "length", this_length, "confidence", this_ca, "normalized_confidence", this_normalized_ca)
+            print_maybe("offset", search_offset, "start", this_start,
+                        "end", this_end, "length", this_length,
+                        "confidence", this_ca,
+                        "normalized_confidence", this_normalized_ca)
             pbar.update(loopsearchstep)
-        print_maybe("best", "start", best_start, "end", best_end, "length", best_length, "confidence", best_ca, "normalized_confidence", best_normalized_ca)
+        print_maybe("best", "start", best_start,
+                    "end", best_end, "length", best_length,
+                    "confidence", best_ca,
+                    "normalized_confidence", best_normalized_ca)
     else:
         ls1, ls2, padsize, xmax, ca = corrabs(s1, s2)
     if show: show1(sample_rate, ca, title='Correlation', v=xmax/sample_rate)
     if loop:
         sync_text = f"""
 ==============================================================================
-{in1} needs ogg tags 'LOOPSTART={int(best_start)} LOOPLENGTH={int(best_length)}' to loop
+{in1} needs tags 'LOOPSTART={int(best_start)} LOOPLENGTH={int(best_length)}'
 ==============================================================================
 """
     elif samples:
@@ -402,10 +449,14 @@ def file_offset(use_argparse = True, **ka):
 ==============================================================================
 """
     if xmax > padsize // 2:
-        if show: show2(sample_rate, s1, s2[padsize-xmax:], title='1st=blue;2nd=red=cut(%s;%s)' % (in1, in2))
+        if show:
+            show2(sample_rate, s1, s2[padsize-xmax:],
+                  title='1st=blue;2nd=red=cut(%s;%s)' % (in1, in2))
         file, offset = in2, (padsize-xmax)
     else:
-        if show: show2(sample_rate, s1[xmax:], s2, title='1st=blue=cut;2nd=red (%s;%s)' % (in1, in2))
+        if show:
+            show2(sample_rate, s1[xmax:], s2,
+                  title='1st=blue=cut;2nd=red (%s;%s)' % (in1, in2))
         file, offset = in1, xmax
     if not samples:
         offset = offset / sample_rate
@@ -413,8 +464,8 @@ def file_offset(use_argparse = True, **ka):
         print_maybe(sync_text)
         mf['LOOPSTART'] = [str(best_start)]
         mf['LOOPLENGTH'] = [str(best_length)]
-        mf['LOOP_START'] = [str(best_start / sample_rate)]
-        mf['LOOP_END'] = [str(best_end / sample_rate)]
+        mf['LOOP_START'] = [str(best_start_seconds)]
+        mf['LOOP_END'] = [str(best_end_seconds)]
         mf.save()
     else:
         print_maybe(sync_text % (file, offset))
