@@ -10,9 +10,15 @@ To install via pip, do this from the `crosslooper` repo directory:
 pip install --user .
 ```
 
-## Usage
+## Prerequisites
 
-The audio files must be of a container format that supports Vorbis Comment metadata. In practice, this means that Ogg files and FLAC files will work. If your audio files are in some other container format (e.g. MP3), you'll need to convert them first.
+* The audio files must not be in a packed/encrypted format. If the game you're working with uses packed or encrypted audio files of some kind, you'll need to unpack them. You may find these tools helpful:
+    * [RPG Maker XP / VX / VX Ace Decrypter](https://github.com/uuksu/RPGMakerDecrypter)
+    * [RPG Maker MV / MZ File Decrypter](https://github.com/Petschko/Java-RPG-Maker-MV-Decrypter)
+    * [Enigma Virtual Box Unpacker](https://github.com/mos9527/evbunpack)
+* The audio files must be of a container format that supports Vorbis Comment metadata. In practice, this means that Ogg files and FLAC files will work. If your audio files are in some other container format (e.g. MP3), you'll need to convert them first, e.g. with [ffmpeg](https://ffmpeg.org/).
+
+## Usage
 
 ### As a game developer
 
