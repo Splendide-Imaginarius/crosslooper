@@ -72,7 +72,7 @@ For more details on the other command-line flags available, see See the help:
 crosslooperdir --help
 ```
 
-## Testing Results
+## Testing Your Results
 
 To play a tagged `.ogg` audio file, you can do one of the following:
 
