@@ -66,7 +66,7 @@ For RPG Maker MV and newer, you need to add a command-line flag:
 crosslooperdir --gameenginever MV
 ```
 
-For more details on the other command-line flags available, see See the help:
+For more details on the other command-line flags available, see the help:
 
 ```
 crosslooperdir --help
