@@ -4,7 +4,9 @@ CrossLooper is a tool for automatically setting the `LOOPSTART`, `LOOPLENGTH`, `
 
 ## Installation
 
-To install via pip, do this from the `crosslooper` repo directory:
+First, you'll need to install [game-engine-finder](https://github.com/vetleledaal/game-engine-finder) according to its installation instructions.
+
+Once you've done that, to install CrossLooper via pip, do this from the `crosslooper` repo directory:
 
 ```
 pip install --user .
@@ -52,19 +54,13 @@ Once you've created the `.conf` file, follow the instructions for "As a game mod
 
 If you're a gamer, you can use CrossLooper to apply loop point presets that game mod developers have submitted to this repository.
 
-From the directory of an RGSS (RPG Maker XP, VX, or VX Ace) game, run the following:
+From the directory of a game, run the following:
 
 ```
 crosslooperdir
 ```
 
 CrossLooper will edit all of the game's BGM files in-place to add loop points.
-
-For RPG Maker MV and newer, you need to add a command-line flag:
-
-```
-crosslooperdir --gameenginever MV
-```
 
 For more details on the other command-line flags available, see the help:
 
@@ -98,3 +94,5 @@ CrossLooper is distributed in the hope that it will be useful, but WITHOUT ANY W
 You should have received a copy of the GNU General Public License along with CrossLooper. If not, see [https://www.gnu.org/licenses/](https://www.gnu.org/licenses/).
 
 CrossLooper is a heavily modified fork of [syncstart](https://github.com/rpuntaie/syncstart), Copyright (C) 2021 Roland Puntaier.
+
+CrossLooper depends on [game-engine-finder](https://github.com/vetleledaal/game-engine-finder), Copyright (c) 2023 Vetle Ledaal, Faalagorn, Splendide Imaginarius.

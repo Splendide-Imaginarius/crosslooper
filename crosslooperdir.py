@@ -14,6 +14,7 @@ except ModuleNotFoundError:
     import tomli as tomllib
 
 from tqdm import tqdm
+import find_engine
 
 import crosslooper
 import crosslooperpresets
@@ -61,17 +62,17 @@ def cli_parser(**ka):
       '--gameengine',
       dest='gameengine',
       action='store',
-      default='RPG Maker',
+      default=None,
       type=str,
-      help="Game engine family. (default: 'RPG Maker')")
+      help="Game engine family, e.g. 'RPG Maker'. (default: auto-detect)")
   if 'gameenginever' not in ka:
     parser.add_argument(
       '--gameenginever',
       dest='gameenginever',
       action='store',
-      default='VX Ace',
+      default=None,
       type=str,
-      help="Game engine version. (default: 'VX Ace')")
+      help="Game engine version, e.g. 'VX Ace'. (default: auto-detect)")
   if 'threads' not in ka:
     parser.add_argument(
       '--threads',
@@ -125,23 +126,37 @@ def file_offset_dir(**ka):
   if gamedir.is_file():
     raise Exception(f'Folder "{gamedir}" is a file.')
 
-  # Validate game engine
-  gameengine = ka['gameengine']
-  gameenginever = ka['gameenginever']
-  if gameengine.lower() == 'RPG Maker'.lower():
-    if gameenginever.lower() in ['VX Ace'.lower(), 'VX'.lower(), 'XP'.lower()]:
+  # Validate game engine if doing so is needed
+  indir = ka['indir']
+  gametitle = ka['gametitle']
+  if indir is None or gametitle is None:
+    gameengine = ka['gameengine']
+    gameenginever = ka['gameenginever']
+    detected_gameengine = '!!!'
+    detected_gameenginever = None
+    if gameengine is None:
+      gameengine, detected_gameenginever = find_engine.detect(gamedir)
+      if gameengine == '!!!':
+        raise Exception('Unrecognized engine')
+      if gameenginever is None:
+        gameenginever = detected_gameenginever
+    if gameengine.lower() == 'RPG Maker'.lower():
+      if gameenginever is None:
+        detected_gameengine, gameenginever = find_engine.detect(gamedir)
+        if gameenginever is None:
+          raise Exception('Unrecognized RPG Maker version')
+      if gameenginever.lower() in ['VX Ace'.lower(), 'VX'.lower(), 'XP'.lower()]:
+        gameengine, gameenginever = 'RPG Maker', 'VX Ace'
+      elif gameenginever.lower().startswith(('MV'.lower(), 'MZ'.lower())):
+        gameengine, gameenginever = 'RPG Maker', 'MV'
+      else:
+        raise Exception(f'Unsupported RPG Maker version "{gameenginever}"')
+    elif gameengine.lower() == 'mkxp'.lower():
       gameengine, gameenginever = 'RPG Maker', 'VX Ace'
-    elif gameenginever.lower() in ['MV'.lower(), 'MZ'.lower()]:
-      gameengine, gameenginever = 'RPG Maker', 'MV'
     else:
-      raise Exception(f'Unsupported RPG Maker version "{gameenginever}"')
-  elif gameengine.lower() == 'mkxp'.lower():
-    gameengine, gameenginever = 'RPG Maker', 'VX Ace'
-  else:
-    raise Exception(f'Unsupported engine "{gameengine}"')
+      raise Exception(f'Unsupported engine "{gameengine}"')
 
   # Validate BGM dir
-  indir = ka['indir']
   if indir is None:
     if gameenginever == 'VX Ace':
       # RGSS
@@ -170,7 +185,6 @@ def file_offset_dir(**ka):
 
   presets = {}
   presetconf = ka['presetconf']
-  gametitle = ka['gametitle']
   presets_tmp = {}
 
   # Detect game title
