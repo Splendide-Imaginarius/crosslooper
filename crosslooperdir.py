@@ -90,7 +90,7 @@ def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, k
     tqdm.set_lock(pbar_lock)
     single_pbar = tqdm(unit='audio_sec', position=process_num+1)
 
-    while(True):
+    while True:
         finished, f = input_file_queue.get()
         if finished:
             break
@@ -211,7 +211,7 @@ def file_offset_dir(**ka):
             with open(indexhtml, 'r') as htmlfile:
                 htmldata = htmlfile.read()
                 htmlmatch = re.search(r'<title>(.*)</title>', htmldata)
-                if(htmlmatch is not None):
+                if htmlmatch is not None:
                     gametitle = htmlmatch.group(1)
     if gametitle is None:
         raise Exception('Failed to detect game title')
