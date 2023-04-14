@@ -33,7 +33,8 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=str,
-            help="Directory containing audio files to loop. (default: detect based on game engine)")
+            help='Directory containing audio files to loop. ' +
+                 '(default: detect based on game engine)')
     if 'presetconf' not in ka:
         parser.add_argument(
             '--presetconf',
@@ -41,7 +42,8 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=str,
-            help="TOML file containing presets for looping audio files. (default: use game title)")
+            help='TOML file containing presets for looping audio files. ' +
+                 '(default: use game title)')
     if 'gametitle' not in ka:
         parser.add_argument(
             '--gametitle',
@@ -49,7 +51,8 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=str,
-            help="Title of game, used to find presets. (default: detect based on game engine)")
+            help='Title of game, used to find presets. ' +
+                 '(default: detect based on game engine)')
     if 'gamedir' not in ka:
         parser.add_argument(
             '--gamedir',
@@ -57,7 +60,8 @@ def cli_parser(**ka):
             action='store',
             default='.',
             type=str,
-            help="Directory containing game files. (default: current working directory)")
+            help='Directory containing game files. ' +
+                 '(default: current working directory)')
     if 'gameengine' not in ka:
         parser.add_argument(
             '--gameengine',
@@ -65,7 +69,8 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=str,
-            help="Game engine family, e.g. 'RPG Maker'. (default: auto-detect)")
+            help='Game engine family, e.g. "RPG Maker". ' +
+                 '(default: auto-detect)')
     if 'gameenginever' not in ka:
         parser.add_argument(
             '--gameenginever',
@@ -73,7 +78,8 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=str,
-            help="Game engine version, e.g. 'VX Ace'. (default: auto-detect)")
+            help='Game engine version, e.g. "VX Ace". ' +
+                 '(default: auto-detect)')
     if 'threads' not in ka:
         parser.add_argument(
             '--threads',
@@ -81,12 +87,14 @@ def cli_parser(**ka):
             action='store',
             default=None,
             type=int,
-            help="Number of threads to use. (default: use all hardware threads)")
+            help='Number of threads to use. ' +
+                 '(default: use all hardware threads)')
 
     return parser
 
 
-def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, ka, presets):
+def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num,
+                     ka, presets):
     tqdm.set_lock(pbar_lock)
     single_pbar = tqdm(unit='audio_sec', position=process_num+1)
 
@@ -103,7 +111,8 @@ def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, k
                 this_ka.update(presets[preset_name])
                 break
 
-        crosslooper.file_offset(use_argparse=False, pbar=single_pbar, **this_ka)
+        crosslooper.file_offset(use_argparse=False, pbar=single_pbar,
+                                **this_ka)
 
         progress_queue.put(1)
 
@@ -148,9 +157,12 @@ def file_offset_dir(**ka):
                 detected_gameengine, gameenginever = find_engine.detect(gamedir)
                 if gameenginever is None:
                     raise Exception('Unrecognized RPG Maker version')
-            if gameenginever.lower() in ['VX Ace'.lower(), 'VX'.lower(), 'XP'.lower()]:
+            if gameenginever.lower() in ['VX Ace'.lower(),
+                                         'VX'.lower(),
+                                         'XP'.lower()]:
                 gameengine, gameenginever = 'RPG Maker', 'VX Ace'
-            elif gameenginever.lower().startswith(('MV'.lower(), 'MZ'.lower())):
+            elif gameenginever.lower().startswith(('MV'.lower(),
+                                                   'MZ'.lower())):
                 gameengine, gameenginever = 'RPG Maker', 'MV'
             else:
                 raise Exception(f'Unsupported RPG Maker version "{gameenginever}"')
@@ -233,11 +245,17 @@ def file_offset_dir(**ka):
 
     # Validate preset file
     for trackname in presets_tmp:
-        presets[trackname.lower()] = {}
+        trackname_l = trackname.lower()
+        presets[trackname_l] = {}
         for option in presets_tmp[trackname]:
-            if not option.lower() in ['normalize', 'denoise', 'lowpass', 'loopstart', 'loopstartmax', 'loopendmin', 'looplenmin', 'loopsearchstep', 'loopsearchlen', 'loopforce', 'skip']:
+            option_l = option.lower()
+            if option_l not in ['normalize', 'denoise', 'lowpass',
+                                'loopstart', 'loopstartmax',
+                                'loopendmin', 'looplenmin',
+                                'loopsearchstep', 'loopsearchlen',
+                                'loopforce', 'skip']:
                 raise Exception(f'Unknown TOML option: {option}')
-            presets[trackname.lower()][option.lower()] = presets_tmp[trackname][option]
+            presets[trackname_l][option_l] = presets_tmp[trackname][option]
 
     input_file_queue = Queue()
 
@@ -249,7 +267,13 @@ def file_offset_dir(**ka):
 
     loop_processes = []
     for p in range(process_num):
-        loop_processes.append(Process(target=loop_process_run, args=(input_file_queue, progress_queue, pbar_lock, p, ka, presets)))
+        loop_processes.append(Process(target=loop_process_run,
+                                      args=(input_file_queue,
+                                            progress_queue,
+                                            pbar_lock,
+                                            p,
+                                            ka,
+                                            presets)))
 
     for p in loop_processes:
         p.start()
