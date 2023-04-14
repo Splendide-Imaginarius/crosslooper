@@ -181,7 +181,7 @@ def file_offset_dir(**ka):
     if indir.is_file():
         raise Exception(f'Folder "{indir}" is a file.')
 
-    files = list(indir.glob(f"**/*"))
+    files = list(indir.glob("**/*"))
 
     pbar_lock = Lock()
     tqdm.set_lock(pbar_lock)
