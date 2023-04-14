@@ -22,6 +22,7 @@ import crosslooperpresets
 __version__ = crosslooper.__version__
 __author__ = crosslooper.__author__
 
+
 def cli_parser(**ka):
     parser = crosslooper.cli_parser(**ka)
 
@@ -84,6 +85,7 @@ def cli_parser(**ka):
 
     return parser
 
+
 def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, ka, presets):
     tqdm.set_lock(pbar_lock)
     single_pbar = tqdm(unit='audio_sec', position=process_num+1)
@@ -104,6 +106,7 @@ def loop_process_run(input_file_queue, progress_queue, pbar_lock, process_num, k
         crosslooper.file_offset(use_argparse=False, pbar=single_pbar, **this_ka)
 
         progress_queue.put(1)
+
 
 def file_offset_dir(**ka):
     """CLI interface to save loop metadata of a directory of audio files.
@@ -261,7 +264,7 @@ def file_offset_dir(**ka):
     for p in loop_processes:
         input_file_queue.put((True, None))
 
+
 main = file_offset_dir
 if __name__ == '__main__':
     main()
-
