@@ -26,55 +26,55 @@ __author__ = crosslooper.__author__
 def cli_parser(**ka):
     parser = crosslooper.cli_parser(**ka)
 
-    if 'indir' not in ka:
+    if 'in-dir' not in ka:
         parser.add_argument(
-            '--indir',
-            dest='indir',
+            '--in-dir',
+            dest='in-dir',
             action='store',
             default=None,
             type=str,
             help='Directory containing audio files to loop. ' +
                  '(default: detect based on game engine)')
-    if 'presetconf' not in ka:
+    if 'preset-conf' not in ka:
         parser.add_argument(
-            '--presetconf',
-            dest='presetconf',
+            '--preset-conf',
+            dest='preset-conf',
             action='store',
             default=None,
             type=str,
             help='TOML file containing presets for looping audio files. ' +
                  '(default: use game title)')
-    if 'gametitle' not in ka:
+    if 'game-title' not in ka:
         parser.add_argument(
-            '--gametitle',
-            dest='gametitle',
+            '--game-title',
+            dest='game-title',
             action='store',
             default=None,
             type=str,
             help='Title of game, used to find presets. ' +
                  '(default: detect based on game engine)')
-    if 'gamedir' not in ka:
+    if 'game-dir' not in ka:
         parser.add_argument(
-            '--gamedir',
-            dest='gamedir',
+            '--game-dir',
+            dest='game-dir',
             action='store',
             default='.',
             type=str,
             help='Directory containing game files. ' +
                  '(default: current working directory)')
-    if 'gameengine' not in ka:
+    if 'game-engine' not in ka:
         parser.add_argument(
-            '--gameengine',
-            dest='gameengine',
+            '--game-engine',
+            dest='game-engine',
             action='store',
             default=None,
             type=str,
             help='Game engine family, e.g. "RPG Maker". ' +
                  '(default: auto-detect)')
-    if 'gameenginever' not in ka:
+    if 'game-engine-ver' not in ka:
         parser.add_argument(
-            '--gameenginever',
-            dest='gameenginever',
+            '--game-engine-ver',
+            dest='game-engine-ver',
             action='store',
             default=None,
             type=str,
@@ -130,7 +130,7 @@ def file_offset_dir(**ka):
     ka.update(args)
 
     # Validate game dir
-    gamedir = ka['gamedir']
+    gamedir = ka['game-dir']
     gamedir = Path(gamedir)
     gamedir = gamedir.resolve()
     if not gamedir.exists():
@@ -139,11 +139,11 @@ def file_offset_dir(**ka):
         raise Exception(f'Folder "{gamedir}" is a file.')
 
     # Validate game engine if doing so is needed
-    indir = ka['indir']
-    gametitle = ka['gametitle']
+    indir = ka['in-dir']
+    gametitle = ka['game-title']
     if indir is None or gametitle is None:
-        gameengine = ka['gameengine']
-        gameenginever = ka['gameenginever']
+        gameengine = ka['game-engine']
+        gameenginever = ka['game-engine-ver']
         detected_gameengine = '!!!'
         detected_gameenginever = None
         if gameengine is None:
@@ -199,7 +199,7 @@ def file_offset_dir(**ka):
     tqdm.set_lock(pbar_lock)
 
     presets = {}
-    presetconf = ka['presetconf']
+    presetconf = ka['preset-conf']
     presets_tmp = {}
 
     # Detect game title
@@ -250,10 +250,10 @@ def file_offset_dir(**ka):
         for option in presets_tmp[trackname]:
             option_l = option.lower()
             if option_l not in ['normalize', 'denoise', 'lowpass',
-                                'loopstart', 'loopstartmax',
-                                'loopendmin', 'looplenmin',
-                                'loopsearchstep', 'loopsearchlen',
-                                'loopforce', 'skip']:
+                                'loop-start-min', 'loop-start-max',
+                                'loop-end-min', 'loop-len-min',
+                                'loop-search-step', 'loop-search-len',
+                                'loop-force', 'skip']:
                 raise Exception(f'Unknown TOML option: {option}')
             presets[trackname_l][option_l] = presets_tmp[trackname][option]
 

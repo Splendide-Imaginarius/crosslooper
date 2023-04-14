@@ -40,7 +40,7 @@ If it gets the loop points wrong, you can pass a variety of flags to help CrossL
 crosslooper --help
 ```
 
-Usually, the `--looplenmin` hint is the only one you will need, but the others may be helpful too. If you're having trouble, you may wish to pass `--verbose` to see logs of which loop point candidates are being considered. If you've already set wrong loop points and want to overwrite them, pass the `--loopforce` flag.
+Usually, the `--loop-len-min` hint is the only one you will need, but the others may be helpful too. If you're having trouble, you may wish to pass `--verbose` to see logs of which loop point candidates are being considered. If you've already set wrong loop points and want to overwrite them, pass the `--loop-force` flag.
 
 ### As a game mod developer
 

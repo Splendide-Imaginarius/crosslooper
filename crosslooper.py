@@ -219,58 +219,58 @@ def cli_parser(**ka):
             action='store_true',
             default=True,
             help='Calculate loop tags.')
-    if 'loopstart' not in ka:
+    if 'loop-start-min' not in ka:
         parser.add_argument(
-            '--loopstart',
-            dest='loopstart',
+            '--loop-start-min',
+            dest='loop-start-min',
             action='store',
             default=5.0,
             type=float,
-            help="Loop start position (seconds). (default: 5)")
-    if 'loopstartmax' not in ka:
+            help="Minimum loop start position (seconds). (default: 5)")
+    if 'loop-start-max' not in ka:
         parser.add_argument(
-            '--loopstartmax',
-            dest='loopstartmax',
+            '--loop-start-max',
+            dest='loop-start-max',
             action='store',
             default=None,
             type=float,
             help="Maximum loop start position (seconds). (default: None)")
-    if 'loopendmin' not in ka:
+    if 'loop-end-min' not in ka:
         parser.add_argument(
-            '--loopendmin',
-            dest='loopendmin',
+            '--loop-end-min',
+            dest='loop-end-min',
             action='store',
             default=20.0,
             type=float,
             help="Minimum loop end position (seconds). (default: 30)")
-    if 'looplenmin' not in ka:
+    if 'loop-len-min' not in ka:
         parser.add_argument(
-            '--looplenmin',
-            dest='looplenmin',
+            '--loop-len-min',
+            dest='loop-len-min',
             action='store',
             default=0.0,
             type=float,
             help="Minimum loop length (seconds). (default: 0)")
-    if 'loopsearchstep' not in ka:
+    if 'loop-search-step' not in ka:
         parser.add_argument(
-            '--loopsearchstep',
-            dest='loopsearchstep',
+            '--loop-search-step',
+            dest='loop-search-step',
             action='store',
             default=1.0,
             type=float,
             help="Resolution for loop search (seconds). (default: 1)")
-    if 'loopsearchlen' not in ka:
+    if 'loop-search-len' not in ka:
         parser.add_argument(
-            '--loopsearchlen',
-            dest='loopsearchlen',
+            '--loop-search-len',
+            dest='loop-search-len',
             action='store',
             default=5.0,
             type=float,
             help="Snippet length for loop search (seconds). (default: 5)")
-    if 'loopforce' not in ka:
+    if 'loop-force' not in ka:
         parser.add_argument(
-            '--loopforce',
-            dest='loopforce',
+            '--loop-force',
+            dest='loop-force',
             action='store_true',
             default=False,
             help='Overwrite existing loop tags. ' +
@@ -313,10 +313,10 @@ def file_offset(use_argparse=True, **ka):
     normalize, denoise, lowpass = ka['normalize'], ka['denoise'], ka['lowpass']
     samples = ka['samples']
     loop = ka['loop']
-    loopstart, loopstartmax = ka['loopstart'], ka['loopstartmax']
-    loopendmin, looplenmin = ka['loopendmin'], ka['looplenmin']
-    loopsearchstep, loopsearchlen = ka['loopsearchstep'], ka['loopsearchlen']
-    loopforce, skip, verbose = ka['loopforce'], ka['skip'], ka['verbose']
+    loopstart, loopstartmax = ka['loop-start-min'], ka['loop-start-max']
+    loopendmin, looplenmin = ka['loop-end-min'], ka['loop-len-min']
+    loopsearchstep, loopsearchlen = ka['loop-search-step'], ka['loop-search-len']
+    loopforce, skip, verbose = ka['loop-force'], ka['skip'], ka['verbose']
 
     if loop:
         mf = mutagen.File(in1)
