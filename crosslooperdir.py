@@ -144,11 +144,11 @@ def file_offset_dir(**ka):
     if indir is None or gametitle is None:
         gameengine = ka['game-engine']
         gameenginever = ka['game-engine-ver']
-        detected_gameengine = '!!!'
+        detected_gameengine = None
         detected_gameenginever = None
         if gameengine is None:
             gameengine, detected_gameenginever = find_engine.detect(gamedir)
-            if gameengine == '!!!':
+            if gameengine is None:
                 raise Exception('Unrecognized engine')
             if gameenginever is None:
                 gameenginever = detected_gameenginever
