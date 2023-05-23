@@ -59,9 +59,11 @@ def print_maybe(*s, **ka):
 def in_out(command, infile, outfile):
     hdr = '-'*len(command)
     print_maybe("%s\n%s\n%s" % (hdr, command, hdr))
-    subprocess.check_call(command.format(infile, outfile),
-                          stdout=(None if verbose else subprocess.DEVNULL),
-                          stderr=(None if verbose else subprocess.DEVNULL))
+    # TODO: Don't use shell.
+    subprocess.run(command.format(infile, outfile),
+                   stdout=(None if verbose else subprocess.DEVNULL),
+                   stderr=(None if verbose else subprocess.DEVNULL),
+                   check=True, shell=True)
 
 
 def normalize_denoise(infile, outname):
