@@ -36,15 +36,15 @@ loopforce = False
 skip = False
 verbose = False
 
-ffmpegwav = 'ffmpeg -i "{}" %s -c:a pcm_s16le -map 0:a "{}"'
-ffmpegnormalize = ('ffmpeg -y -nostdin -i "{}" -filter_complex ' +
-                   "'[0:0]loudnorm=i=-23.0:lra=7.0:tp=-2.0:offset=4.45:" +
-                   "linear=true:print_format=json[norm0]' " +
-                   "-map_metadata 0 -map_metadata:s:a:0 0:s:a:0 " +
-                   "-map_chapters 0 -c:v copy -map '[norm0]' " +
-                   '-c:a:0 pcm_s16le -c:s copy "{}"')
-ffmpegdenoise = 'ffmpeg -i "{}" -af'+" 'afftdn=nf=-25' "+'"{}"'
-ffmpeglow = 'ffmpeg -i "{}" -af'+" 'lowpass=f=%s' "+'"{}"'
+ffmpegwav = ['ffmpeg', '-i', '{infile}', '-c:a', 'pcm_s16le', '-map', '0:a', '{outfile}']
+ffmpegwavtake = ['ffmpeg', '-i', '{infile}', '-t', '{take}', '-c:a', 'pcm_s16le', '-map', '0:a', '{outfile}']
+ffmpegnormalize = ['ffmpeg', '-y', '-nostdin', '-i', '{infile}', '-filter_complex',
+                   '[0:0]loudnorm=i=-23.0:lra=7.0:tp=-2.0:offset=4.45:linear=true:print_format=json[norm0]',
+                   '-map_metadata', '0', '-map_metadata:s:a:0', '0:s:a:0',
+                   '-map_chapters', '0', '-c:v', 'copy', '-map', '[norm0]',
+                   '-c:a:0', 'pcm_s16le', '-c:s', 'copy', '{outfile}']
+ffmpegdenoise = ['ffmpeg', '-i', '{infile}', '-af', 'afftdn=nf=-25', '{outfile}']
+ffmpeglow = ['ffmpeg', '-i', '{infile}', '-af', 'lowpass=f={lowpass}', '{outfile}']
 
 
 def o(x):
@@ -59,19 +59,17 @@ def print_maybe(*s, **ka):
 def in_out(command, infile, outfile):
     hdr = '-'*len(command)
     print_maybe("%s\n%s\n%s" % (hdr, command, hdr))
-    # TODO: Don't use shell.
-    subprocess.run(command.format(infile, outfile),
+    command = list([token.format(infile=infile, outfile=outfile, take=take, lowpass=lowpass) for token in command])
+    subprocess.run(command,
                    stdout=(None if verbose else subprocess.DEVNULL),
                    stderr=(None if verbose else subprocess.DEVNULL),
-                   check=True, shell=True)
+                   check=True)
 
 
 def normalize_denoise(infile, outname):
     with tempfile.TemporaryDirectory() as tempdir:
         outfile = o(pathlib.Path(tempdir)/outname)
-        ffmpegwav_take = (ffmpegwav % ('-t %s' % take) if take is not None
-                          else ffmpegwav % (''))
-        in_out(ffmpegwav_take, infile, outfile)
+        in_out(ffmpegwav if take is None else ffmpegwavtake, infile, outfile)
         if normalize:
             infile, outfile = outfile, o(outfile)
             in_out(ffmpegnormalize, infile, outfile)
@@ -82,7 +80,7 @@ def normalize_denoise(infile, outname):
             in_out(ffmpegdenoise, infile, outfile)
         if int(lowpass):
             infile, outfile = outfile, o(outfile)
-            in_out(ffmpeglow % lowpass, infile, outfile)
+            in_out(ffmpeglow, infile, outfile)
         r, s = wavfile.read(outfile)
         # Check if stereo
         if len(s.shape) > 1:
