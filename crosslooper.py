@@ -402,7 +402,7 @@ def file_offset(use_argparse=True, **ka):
             candidate = corrabs(s1[this_start:][:searchlen_samples],
                                 s2[this_end_min:])
             ls1, ls2, padsize, xmax, ca = candidate
-            this_ca = max(ca)
+            this_ca = ca[xmax]
             this_norm_magnitude = searchlen_samples * (len(s2) - this_end_min)
             this_normalized_ca = this_ca / this_norm_magnitude
             this_end = this_end_min + (padsize - xmax)
@@ -474,7 +474,7 @@ def file_offset(use_argparse=True, **ka):
         return file, offset, best_ca
     else:
         print_maybe(sync_text % (file, offset))
-    return file, offset, max(ca)
+    return file, offset, ca[xmax]
 
 
 main = file_offset
