@@ -322,7 +322,7 @@ def file_offset(use_argparse=True, **ka):
         mf = mutagen.File(in1)
         if not isinstance(mf, (ogg.OggFileType, flac.FLAC)):
             print_maybe('Not a Vorbis Comment file, skipping')
-            return in1, None
+            return in1, None, None
 
     if loop and not loopforce:
         # Check for samples-denominated tags.
@@ -330,11 +330,11 @@ def file_offset(use_argparse=True, **ka):
             # Check for seconds-denominated tags.
             if 'LOOP_START' in mf and 'LOOP_END' in mf:
                 print_maybe('Loop tags already present, skipping')
-                return in1, None
+                return in1, None, None
 
     if skip:
         print_maybe('Skipping')
-        return in1, None
+        return in1, None, None
 
     sample_rate, s1, s2 = read_normalized(in1, in2)
 
@@ -351,7 +351,7 @@ def file_offset(use_argparse=True, **ka):
                 mf['LOOP_START'] = [str(best_start_seconds)]
                 mf['LOOP_END'] = [str(best_end_seconds)]
                 mf.save()
-                return in1, None
+                return in1, None, None
         if 'LOOP_START' in mf and 'LOOP_END' in mf:
             if 'LOOPSTART' not in mf or 'LOOPLENGTH' not in mf:
                 print_maybe('Converting seconds loop tags to ' +
@@ -364,7 +364,10 @@ def file_offset(use_argparse=True, **ka):
                 mf['LOOPSTART'] = [str(best_start)]
                 mf['LOOPLENGTH'] = [str(best_length)]
                 mf.save()
-                return in1, None
+                return in1, None, None
+
+    init_start = int(loopstart*sample_rate)
+    searchlen_samples = int(loopsearchlen*sample_rate)
 
     if loop:
         best_ca = 0
@@ -373,8 +376,6 @@ def file_offset(use_argparse=True, **ka):
         best_start_seconds = 0.0
         best_end = 0
         best_end_seconds = 0.0
-        searchlen_samples = int(loopsearchlen*sample_rate)
-        init_start = int(loopstart*sample_rate)
         init_end_min = int(loopendmin*sample_rate)
 
         # We don't want to only loop a tiny piece at the end of the file.
@@ -430,7 +431,7 @@ def file_offset(use_argparse=True, **ka):
                     "confidence", best_ca,
                     "normalized_confidence", best_normalized_ca)
     else:
-        ls1, ls2, padsize, xmax, ca = corrabs(s1, s2)
+        ls1, ls2, padsize, xmax, ca = corrabs(s1[init_start:][:searchlen_samples], s2)
     if show:
         show1(sample_rate, ca, title='Correlation', v=xmax/sample_rate)
     if loop:
@@ -470,9 +471,10 @@ def file_offset(use_argparse=True, **ka):
         mf['LOOP_START'] = [str(best_start_seconds)]
         mf['LOOP_END'] = [str(best_end_seconds)]
         mf.save()
+        return file, offset, best_ca
     else:
         print_maybe(sync_text % (file, offset))
-    return file, offset
+    return file, offset, max(ca)
 
 
 main = file_offset
