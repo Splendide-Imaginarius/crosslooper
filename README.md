@@ -70,16 +70,16 @@ crosslooperdir --help
 
 ## Testing Your Results
 
-To play a tagged `.ogg` audio file, you can do one of the following:
+The easiest way to test your results is by playing your `.ogg` or `.flac` file in [vgmstream](https://vgmstream.org/).
+
+Alternatively, to play a resulting `.ogg` audio file, you can do one of the following:
 
 * Replace the title screen `.ogg` file of an RPG Maker game with the tagged audio file you created; then launch the RPG Maker game.
 * Play the `.ogg` file with [loop-ogg](https://github.com/SolraBizna/loop-ogg).
 
-I am not currently aware of any `.flac` players that support loop points; please let me know if there exist any.
-
 ## Standards
 
-CrossLooper sets both seconds-denominated loop points and samples-denominated loop points. [Further explanation is here.](https://github.com/SolraBizna/loop-ogg#what) RPG Maker only uses samples-denominated loop points and will ignore seconds-denominated loop points.
+By default, CrossLooper sets samples-denominated loop points (`LOOPSTART` and `LOOPLENGTH`). These are well-standardized and should work consistently. If you set the `--loop-enable-seconds-tags` flag, CrossLooper can also set seconds-denominated loop points (`LOOP_START` and `LOOP_END`), but these are not well-standardized and will break playback in some software (e.g. vgmstream). It is recommended to not change the default unless you specifically are targeting software that requires seconds-denominated loop points.
 
 ## Credits
 

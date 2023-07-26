@@ -275,6 +275,14 @@ def cli_parser(**ka):
             default=False,
             help='Overwrite existing loop tags. ' +
                  '(default: skip files with existing loop tags)')
+    if 'loop-enable-seconds-tags' not in ka:
+        parser.add_argument(
+            '--loop-enable-seconds-tags',
+            dest='loop-enable-seconds-tags',
+            action='store_true',
+            default=False,
+            help='Enable seconds-denominated Vorbis Comment tags. Not standardized; may break playback in some software. ' +
+                 '(default: only use samples-denominated Vorbis Comment tags)')
     if 'skip' not in ka:
         parser.add_argument(
             '--skip',
@@ -316,6 +324,7 @@ def file_offset(use_argparse=True, **ka):
     loopstart, loopstartmax = ka['loop-start-min'], ka['loop-start-max']
     loopendmin, looplenmin = ka['loop-end-min'], ka['loop-len-min']
     loopsearchstep, loopsearchlen = ka['loop-search-step'], ka['loop-search-len']
+    loopseconds = ka['loop-enable-seconds-tags']
     loopforce, skip, verbose = ka['loop-force'], ka['skip'], ka['verbose']
 
     if loop:
@@ -328,7 +337,7 @@ def file_offset(use_argparse=True, **ka):
         # Check for samples-denominated tags.
         if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
             # Check for seconds-denominated tags.
-            if 'LOOP_START' in mf and 'LOOP_END' in mf:
+            if not loopseconds or ('LOOP_START' in mf and 'LOOP_END' in mf):
                 print_maybe('Loop tags already present, skipping')
                 return in1, None, None
 
@@ -338,7 +347,7 @@ def file_offset(use_argparse=True, **ka):
 
     sample_rate, s1, s2 = read_normalized(in1, in2)
 
-    if loop and not loopforce:
+    if loop and loopseconds and not loopforce:
         if 'LOOPSTART' in mf and 'LOOPLENGTH' in mf:
             if 'LOOP_START' not in mf or 'LOOP_END' not in mf:
                 print_maybe('Converting samples loop tags to ' +
@@ -468,8 +477,9 @@ def file_offset(use_argparse=True, **ka):
         print_maybe(sync_text)
         mf['LOOPSTART'] = [str(best_start)]
         mf['LOOPLENGTH'] = [str(best_length)]
-        mf['LOOP_START'] = [str(best_start_seconds)]
-        mf['LOOP_END'] = [str(best_end_seconds)]
+        if loopseconds:
+            mf['LOOP_START'] = [str(best_start_seconds)]
+            mf['LOOP_END'] = [str(best_end_seconds)]
         mf.save()
         return file, offset, best_ca
     else:
