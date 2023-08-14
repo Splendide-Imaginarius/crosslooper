@@ -81,6 +81,10 @@ Alternatively, to play a resulting `.ogg` audio file, you can do one of the foll
 
 By default, CrossLooper sets samples-denominated loop points (`LOOPSTART` and `LOOPLENGTH`). These are well-standardized and should work consistently. If you set the `--loop-enable-seconds-tags` flag, CrossLooper can also set seconds-denominated loop points (`LOOP_START` and `LOOP_END`), but these are not well-standardized and will break playback in some software (e.g. vgmstream). It is recommended to not change the default unless you specifically are targeting software that requires seconds-denominated loop points.
 
+## Related Projects
+
+* [WavGrep](https://github.com/Splendide-Imaginarius/wavgrep)
+
 ## Credits
 
 Copyright 2023 Splendide Imaginarius.
