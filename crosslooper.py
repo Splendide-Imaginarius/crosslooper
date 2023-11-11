@@ -66,10 +66,10 @@ def in_out(command, infile, outfile):
                    check=True)
 
 
-def normalize_denoise(infile, outname):
+def normalize_denoise(infile, outname, allow_take=True):
     with tempfile.TemporaryDirectory() as tempdir:
         outfile = o(pathlib.Path(tempdir)/outname)
-        in_out(ffmpegwav if take is None else ffmpegwavtake, infile, outfile)
+        in_out(ffmpegwav if (take is None or not allow_take) else ffmpegwavtake, infile, outfile)
         if normalize:
             infile, outfile = outfile, o(outfile)
             in_out(ffmpegnormalize, infile, outfile)
