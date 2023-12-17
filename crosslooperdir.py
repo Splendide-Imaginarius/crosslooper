@@ -262,6 +262,7 @@ def file_offset_dir(**ka):
     process_num = ka['threads']
     if process_num is None:
         process_num = os.cpu_count()
+    process_num = min([process_num, len(files)])
 
     progress_queue = Queue()
 
