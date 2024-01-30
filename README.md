@@ -85,6 +85,7 @@ By default, CrossLooper sets samples-denominated loop points (`LOOPSTART` and `L
 
 ## Related Projects
 
+* [CrossTrimmer](https://github.com/Splendide-Imaginarius/crosstrimmer)
 * [WavGrep](https://github.com/Splendide-Imaginarius/wavgrep)
 
 ## Credits
