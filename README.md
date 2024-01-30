@@ -89,7 +89,7 @@ By default, CrossLooper sets samples-denominated loop points (`LOOPSTART` and `L
 
 ## Credits
 
-Copyright 2023 Splendide Imaginarius.
+Copyright 2023-2024 Splendide Imaginarius.
 
 This is not a license requirement, but if you use CrossLooper for a project such as a game or a game mod, it would be greatly appreciated if you credit me. Example credits: "BGM was looped with CrossLooper by Splendide Imaginarius." Linking back to this Git repository would also be greatly appreciated.
 
