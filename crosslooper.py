@@ -10,7 +10,7 @@ import math
 import pathlib
 import subprocess
 import mutagen
-from mutagen import ogg, flac
+from mutagen import ogg, flac, apev2
 from tqdm import tqdm
 
 matplotlib.use('TkAgg')
@@ -330,8 +330,8 @@ def file_offset(use_argparse=True, **ka):
     if loop:
         mf = mutagen.File(in1)
         if not isinstance(mf, (ogg.OggFileType, flac.FLAC)):
-            print_maybe('Not a Vorbis Comment file, skipping')
-            return in1, None, None
+            # Not a Vorbis Comment file; fallback to APEv2
+            mf = apev2.APEv2File(in1)
 
     if loop and not loopforce:
         # Check for samples-denominated tags.

@@ -18,7 +18,7 @@ pip install --user .
     * [RPG Maker XP / VX / VX Ace Decrypter](https://github.com/uuksu/RPGMakerDecrypter)
     * [RPG Maker MV / MZ File Decrypter](https://github.com/Petschko/Java-RPG-Maker-MV-Decrypter)
     * [Enigma Virtual Box Unpacker](https://github.com/mos9527/evbunpack)
-* The audio files must be of a container format that supports Vorbis Comment metadata. In practice, this means that Ogg files and FLAC files will work. If your audio files are in some other container format (e.g. MP3), you'll need to convert them first, e.g. with [ffmpeg](https://ffmpeg.org/).
+* The audio files must be of a container format that can be read by ffmpeg and supports Vorbis Comment or APEv2 metadata. So, pretty much anything works in theory. However, depending on which formats are supported by whatever you're using to play the resulting files (Ogg has the most widespread support, followed by FLAC, with other formats being rarely supported by players), you may need to convert the files first, e.g. with [ffmpeg](https://ffmpeg.org/).
 
 ## Usage
 
@@ -76,6 +76,8 @@ Alternatively, to play a resulting `.ogg` audio file, you can do one of the foll
 
 * Replace the title screen `.ogg` file of an RPG Maker game with the tagged audio file you created; then launch the RPG Maker game.
 * Play the `.ogg` file with [loop-ogg](https://github.com/SolraBizna/loop-ogg).
+
+I'm not aware of any players that currently support APEv2 loop points; please let me know if any exist.
 
 ## Standards
 
