@@ -6,6 +6,8 @@ CrossLooper is a tool for automatically setting the `LOOPSTART`, `LOOPLENGTH`, `
 
 First, you'll need to install [game-engine-finder](https://github.com/vetleledaal/game-engine-finder) according to its installation instructions.
 
+You'll also need to install [ffmpeg](https://ffmpeg.org/), e.g. via `sudo apt install ffmpeg`.
+
 Once you've done that, to install CrossLooper via pip, do this from the `crosslooper` repo directory:
 
 ```
